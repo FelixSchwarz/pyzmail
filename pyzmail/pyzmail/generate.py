@@ -17,18 +17,14 @@ For short:
 ... #doctest: +SKIP
 """
 
-import os, sys
+import sys
 import time
-import base64
 import smtplib, socket
-import email
 import email.encoders
 import email.header
 import email.utils
-import email.mime
 import email.mime.base
 import email.mime.text
-import email.mime.image
 import email.mime.multipart
 
 import utils
