@@ -181,14 +181,14 @@ def build_mail(text, html=None, attachments=[], embeddeds=[]):
     <BLANKLINE>
     """
 
-    main=text_part=html_part=None
+    main = text_part = html_part = None
     if text:
-        content, charset=text
-        main=text_part=email.mime.text.MIMEText(content, 'plain', charset)
+        content, charset = text
+        main = text_part = email.mime.text.MIMEText(content, 'plain', charset)
 
     if html:
-        content, charset=html
-        main=html_part=email.mime.text.MIMEText(content, 'html', charset)
+        content, charset = html
+        main = html_part=email.mime.text.MIMEText(content, 'html', charset)
 
     if not text_part and not html_part:
         main=text_part=email.mime.text.MIMEText('', 'plain', 'us-ascii')
