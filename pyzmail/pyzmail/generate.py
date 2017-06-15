@@ -105,8 +105,17 @@ def format_addresses(addresses, header_name=None, charset=None):
 
     return header
 
+def build_mimetext_part(content, charset, mime_subtype=u'plain', use_quoted_printable=False):
+    if not use_quoted_printable:
+        return email.mime.text.MIMEText(content, mime_subtype, charset)
 
-def build_mail(text, html=None, attachments=[], embeddeds=[]):
+    mime_text = email.mime.text.MIMEText(None, mime_subtype)
+    mime_text.replace_header('Content-Transfer-Encoding', 'quoted-printable')
+    mime_text.set_payload(content, charset)
+    return mime_text
+
+
+def build_mail(text, html=None, attachments=[], embeddeds=[], use_quoted_printable=False):
     """
     Generate the core of the email message regarding the parameters.
     The structure of the MIME email may vary, but the general one is as follow::
@@ -184,11 +193,11 @@ def build_mail(text, html=None, attachments=[], embeddeds=[]):
     main = text_part = html_part = None
     if text:
         content, charset = text
-        main = text_part = email.mime.text.MIMEText(content, 'plain', charset)
+        main = text_part = build_mimetext_part(content, charset, u'plain', use_quoted_printable=use_quoted_printable)
 
     if html:
         content, charset = html
-        main = html_part=email.mime.text.MIMEText(content, 'html', charset)
+        main = html_part = build_mimetext_part(content, charset, u'html', use_quoted_printable=use_quoted_printable)
 
     if not text_part and not html_part:
         main=text_part=email.mime.text.MIMEText('', 'plain', 'us-ascii')
@@ -203,7 +212,7 @@ def build_mail(text, html=None, attachments=[], embeddeds=[]):
             if not isinstance(part, email.mime.base.MIMEBase):
                 data, maintype, subtype, content_id, charset=part
                 if (maintype=='text'):
-                    part=email.mime.text.MIMEText(data, subtype, charset)
+                    part = build_mimetext_part(data, charset, subtype, use_quoted_printable=use_quoted_printable)
                 else:
                     part=email.mime.base.MIMEBase(maintype, subtype)
                     part.set_payload(data)
@@ -220,7 +229,7 @@ def build_mail(text, html=None, attachments=[], embeddeds=[]):
             if not isinstance(part, email.mime.base.MIMEBase):
                 data, maintype, subtype, filename, charset=part
                 if (maintype=='text'):
-                    part=email.mime.text.MIMEText(data, subtype, charset)
+                    part = build_mimetext_part(data, charset, subtype, use_quoted_printable=use_quoted_printable)
                 else:
                     part=email.mime.base.MIMEBase(maintype, subtype)
                     part.set_payload(data)
