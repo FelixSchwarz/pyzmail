@@ -116,6 +116,21 @@ def build_mimetext_part(content, charset, mime_subtype=u'plain', use_quoted_prin
     mime_text.set_payload(content, charset)
     return mime_text
 
+def build_mime_part(data, maintype, subtype, charset, use_quoted_printable=False):
+    if maintype == 'text':
+        part = build_mimetext_part(
+            data,
+            charset,
+            subtype,
+            use_quoted_printable=use_quoted_printable
+        )
+    else:
+        part = email.mime.base.MIMEBase(maintype, subtype)
+        part.set_payload(data)
+        email.encoders.encode_base64(part)
+    return part
+
+
 AttachmentType = namedtuple('Attachment', ('data', 'maintype', 'subtype', 'filename', 'charset'))
 class Attachment(AttachmentType):
     def __new__(cls, data, maintype='application', subtype='octet-stream', filename=None, charset=None, use_quoted_printable=False):
@@ -130,19 +145,30 @@ class Attachment(AttachmentType):
         return cls(fp.read(), maintype=maintype, subtype=subtype, filename=filename)
 
     def as_mime_part(self):
-        if self.maintype == 'text':
-            part = build_mimetext_part(
-                self.data,
-                self.charset,
-                self.subtype,
-                use_quoted_printable=self.use_quoted_printable
-            )
-        else:
-            part = email.mime.base.MIMEBase(self.maintype, self.subtype)
-            part.set_payload(self.data)
-            email.encoders.encode_base64(part)
+        part = build_mime_part(self.data, self.maintype, self.subtype, self.charset, use_quoted_printable=self.use_quoted_printable)
         part.add_header('Content-Disposition', 'attachment', filename=self.filename)
         return part
+
+
+
+EmbeddedFileType = namedtuple('EmbeddedFile', ('data', 'maintype', 'subtype', 'content_id', 'charset'))
+class EmbeddedFile(EmbeddedFileType):
+    def __new__(cls, data, maintype='application', subtype='octet-stream', content_id=None, charset=None):
+        self = super(EmbeddedFile, cls).__new__(cls, data, maintype, subtype, content_id, charset)
+        return self
+
+    @classmethod
+    def from_fp(cls, fp, mime_type='application/octet-stream'):
+        content_id = os.path.basename(fp.name)
+        maintype, subtype = mime_type.split('/')
+        return cls(fp.read(), maintype=maintype, subtype=subtype, content_id=content_id)
+
+    def as_mime_part(self):
+        part = build_mime_part(self.data, self.maintype, self.subtype, self.charset, use_quoted_printable=False)
+        part.add_header('Content-ID', '<%s>' % self.content_id)
+        part.add_header('Content-Disposition', 'inline')
+        return part
+
 
 
 def build_mail(text, html=None, attachments=[], embeddeds=[], use_quoted_printable=False):
@@ -240,15 +266,11 @@ def build_mail(text, html=None, attachments=[], embeddeds=[], use_quoted_printab
         related.attach(main)
         for part in embeddeds:
             if not isinstance(part, email.mime.base.MIMEBase):
-                data, maintype, subtype, content_id, charset=part
-                if (maintype=='text'):
-                    part = build_mimetext_part(data, charset, subtype, use_quoted_printable=use_quoted_printable)
+                if not hasattr(part, 'as_mime_part'):
+                    embedded_part = EmbeddedFile(*part)
                 else:
-                    part=email.mime.base.MIMEBase(maintype, subtype)
-                    part.set_payload(data)
-                    email.encoders.encode_base64(part)
-                part.add_header('Content-ID', '<'+content_id+'>')
-                part.add_header('Content-Disposition', 'inline')
+                    embedded_part = part
+                part = embedded_part.as_mime_part()
             related.attach(part)
         main=related
 
