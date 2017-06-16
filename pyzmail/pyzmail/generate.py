@@ -389,6 +389,19 @@ def complete_mail(message, sender, recipients, subject, default_charset, cc=[], 
         msg_id = None
     else:
         msg_id = email.utils.make_msgid(message_id_string)
+        # make_msgid() always appends the local host name - however some users
+        # might not want to expose internal host names.
+        # Example: The web service is behind a DDoS protection service which
+        # works only on a DNS layer and the internal host name might resolve to
+        # the real IP without DDoS protection.
+        # The following condition enables the user to use a custom hostname by
+        # setting message_id_string to something like 'foo@my.host.example'.
+        # The code then removes the automatically appended internal hostname.
+        if '@' in message_id_string:
+            msg_id = msg_id.rsplit('@', 1)[0]
+            # the following assertion should trigger if Python handles
+            # duplicate @ items in make_msgid().
+            assert '@' in msg_id, ('No @ in message id %r' % msg_id)
         message['Message-Id'] = msg_id
 
     for field, value in headers:
