@@ -385,10 +385,11 @@ def complete_mail(message, sender, recipients, subject, default_charset, cc=[], 
         utc_from_epoch=time.time()
     message['Date'] = email.utils.formatdate(utc_from_epoch, localtime=True)
 
-    if message_id_string:
-        msg_id=message['Message-Id']=email.utils.make_msgid(message_id_string)
+    if not message_id_string:
+        msg_id = None
     else:
-        msg_id=None
+        msg_id = email.utils.make_msgid(message_id_string)
+        message['Message-Id'] = msg_id
 
     for field, value in headers:
         if isinstance(value, email.header.Header):
