@@ -17,6 +17,8 @@ For short:
 ... #doctest: +SKIP
 """
 
+from collections import namedtuple
+import os
 import sys
 import time
 import smtplib, socket
@@ -113,6 +115,34 @@ def build_mimetext_part(content, charset, mime_subtype=u'plain', use_quoted_prin
     mime_text.replace_header('Content-Transfer-Encoding', 'quoted-printable')
     mime_text.set_payload(content, charset)
     return mime_text
+
+AttachmentType = namedtuple('Attachment', ('data', 'maintype', 'subtype', 'filename', 'charset'))
+class Attachment(AttachmentType):
+    def __new__(cls, data, maintype='application', subtype='octet-stream', filename=None, charset=None, use_quoted_printable=False):
+        self = super(Attachment, cls).__new__(cls, data, maintype, subtype, filename, charset)
+        self.use_quoted_printable = use_quoted_printable
+        return self
+
+    @classmethod
+    def from_fp(cls, fp, mime_type='application/octet-stream'):
+        filename = os.path.basename(fp.name)
+        maintype, subtype = mime_type.split('/')
+        return cls(fp.read(), maintype=maintype, subtype=subtype, filename=filename)
+
+    def as_mime_part(self):
+        if self.maintype == 'text':
+            part = build_mimetext_part(
+                self.data,
+                self.charset,
+                self.subtype,
+                use_quoted_printable=self.use_quoted_printable
+            )
+        else:
+            part = email.mime.base.MIMEBase(self.maintype, self.subtype)
+            part.set_payload(self.data)
+            email.encoders.encode_base64(part)
+        part.add_header('Content-Disposition', 'attachment', filename=self.filename)
+        return part
 
 
 def build_mail(text, html=None, attachments=[], embeddeds=[], use_quoted_printable=False):
@@ -227,14 +257,11 @@ def build_mail(text, html=None, attachments=[], embeddeds=[], use_quoted_printab
         mixed.attach(main)
         for part in attachments:
             if not isinstance(part, email.mime.base.MIMEBase):
-                data, maintype, subtype, filename, charset=part
-                if (maintype=='text'):
-                    part = build_mimetext_part(data, charset, subtype, use_quoted_printable=use_quoted_printable)
+                if not hasattr(part, 'as_mime_part'):
+                    attachment = Attachment(*part, use_quoted_printable=use_quoted_printable)
                 else:
-                    part=email.mime.base.MIMEBase(maintype, subtype)
-                    part.set_payload(data)
-                    email.encoders.encode_base64(part)
-                part.add_header('Content-Disposition', 'attachment', filename=filename)
+                    attachment = part
+                part = attachment.as_mime_part()
             mixed.attach(part)
         main=mixed
 
