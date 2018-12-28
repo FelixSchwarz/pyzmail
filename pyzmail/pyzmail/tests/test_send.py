@@ -15,7 +15,11 @@ smtp_password=None
 
 class SMTPServer(smtpd.SMTPServer):
     def __init__(self, localaddr, remoteaddr, received):
-        smtpd.SMTPServer.__init__(self, localaddr, remoteaddr)
+        try:
+            smtpd.SMTPServer.__init__(self, localaddr, remoteaddr,
+                                      decode_data=True)
+        except TypeError:
+            smtpd.SMTPServer.__init__(self, localaddr, remoteaddr)
         self.set_reuse_addr()
         # put the received mail into received list
         self.received=received
