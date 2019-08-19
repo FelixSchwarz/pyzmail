@@ -18,6 +18,7 @@ For short:
 """
 
 from collections import namedtuple
+import mimetypes
 import os
 import sys
 import time
@@ -158,7 +159,9 @@ class EmbeddedFile(EmbeddedFileType):
         return self
 
     @classmethod
-    def from_fp(cls, fp, mime_type='application/octet-stream'):
+    def from_fp(cls, fp, mime_type=None):
+        if mime_type is None:
+            mime_type = guess_mime_type(fp)
         content_id = os.path.basename(fp.name)
         maintype, subtype = mime_type.split('/')
         return cls(fp.read(), maintype=maintype, subtype=subtype, content_id=content_id)
@@ -169,6 +172,16 @@ class EmbeddedFile(EmbeddedFileType):
         part.add_header('Content-Disposition', 'inline')
         return part
 
+
+def guess_mime_type(fp, default_type='application/octet-stream'):
+    filename = getattr(fp, 'name', None)
+    if filename:
+        guessed_type, guessed_encoding = mimetypes.guess_type(filename)
+        if guessed_type:
+            mime_type = guessed_type
+    if mime_type is None:
+        mime_type = default_type
+    return mime_type
 
 
 def build_mail(text, html=None, attachments=[], embeddeds=[], use_quoted_printable=False):
