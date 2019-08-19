@@ -152,24 +152,34 @@ class Attachment(AttachmentType):
 
 
 
-EmbeddedFileType = namedtuple('EmbeddedFile', ('data', 'maintype', 'subtype', 'content_id', 'charset'))
+EmbeddedFileType = namedtuple('EmbeddedFile', ('data', 'maintype', 'subtype', 'content_id', 'charset', 'filename'))
 class EmbeddedFile(EmbeddedFileType):
-    def __new__(cls, data, maintype='application', subtype='octet-stream', content_id=None, charset=None):
-        self = super(EmbeddedFile, cls).__new__(cls, data, maintype, subtype, content_id, charset)
+    def __new__(cls, data, maintype='application', subtype='octet-stream', content_id=None, charset=None, filename=None):
+        self = super(EmbeddedFile, cls).__new__(cls, data, maintype, subtype, content_id, charset, filename)
         return self
 
     @classmethod
     def from_fp(cls, fp, mime_type=None):
         if mime_type is None:
             mime_type = guess_mime_type(fp)
-        content_id = os.path.basename(fp.name)
+        filename = os.path.basename(fp.name)
+        content_id = filename
         maintype, subtype = mime_type.split('/')
-        return cls(fp.read(), maintype=maintype, subtype=subtype, content_id=content_id)
+        return cls(
+            fp.read(),
+            maintype=maintype,
+            subtype=subtype,
+            content_id=content_id,
+            filename=filename,
+        )
 
     def as_mime_part(self):
         part = build_mime_part(self.data, self.maintype, self.subtype, self.charset, use_quoted_printable=False)
         part.add_header('Content-ID', '<%s>' % self.content_id)
-        part.add_header('Content-Disposition', 'inline')
+        content_disposition = 'inline'
+        if self.filename:
+            content_disposition += '; filename="%s"' % self.filename
+        part.add_header('Content-Disposition', content_disposition)
         return part
 
 
