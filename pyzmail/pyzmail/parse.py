@@ -639,7 +639,7 @@ class PyzMessage(email.message.Message):
         for part in self.mailparts:
             ext=mimetypes.guess_extension(part.type)
             if not ext:
-                 # default to .bin
+                # default to .bin
                 ext='.bin'
             elif ext=='.ksh':
                 # guess_extension() is not very accurate, .txt is more
