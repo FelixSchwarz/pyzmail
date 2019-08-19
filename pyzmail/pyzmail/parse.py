@@ -7,7 +7,7 @@
 """
 Useful functions to parse emails
 
-@var email_address_re: a regex that match well formed email address (from perlfaq9)
+@var email_address_re: a regex that match a well formed email address (from perlfaq9)
 @undocumented: atom_rfc2822
 @undocumented: atom_posfix_restricted
 @undocumented: atom
@@ -803,8 +803,8 @@ if __name__ == "__main__":
     print 'Message-Id: %r' % (msg.get_decoded_header('message-id', ''), )
 
     for mailpart in msg.mailparts:
-        # dont forget to be careful to sanitize 'filename' and be carefull
-        # for filename collision, to before to save :
+        # don't forget to be careful to sanitize 'filename' and be careful
+        # for filename collision, to before to save:
         print '   %sfilename=%r type=%s charset=%s desc=%s size=%d' % ('*'if mailpart.is_body else ' ', mailpart.filename, mailpart.type, mailpart.charset, mailpart.part.get('Content-Description'), 0 if mailpart.get_payload()==None else len(mailpart.get_payload()))
 
         if mailpart.is_body=='text/plain':
