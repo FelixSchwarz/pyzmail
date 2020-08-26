@@ -1,3 +1,12 @@
+
+# "releases" from FelixSchwarz fork
+
+2020-08-26 pyzmail-1.0.6
+  generate.py:
+  - can set content_id via EmbeddedFile.from_fp()
+
+# ---------------------------------------------------
+
 2015-xx-xx pyzmail-1.0.4
   all:
     - remove trailing white spaces in all sources and doc files
