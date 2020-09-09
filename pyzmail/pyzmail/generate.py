@@ -159,10 +159,11 @@ class EmbeddedFile(EmbeddedFileType):
         return self
 
     @classmethod
-    def from_fp(cls, fp, mime_type=None, content_id=None):
+    def from_fp(cls, fp, mime_type=None, content_id=None, filename=None):
         if mime_type is None:
             mime_type = guess_mime_type(fp)
-        filename = os.path.basename(fp.name)
+        if filename is None:
+            filename = os.path.basename(fp.name)
         if content_id is None:
             content_id = filename
         maintype, subtype = mime_type.split('/')
