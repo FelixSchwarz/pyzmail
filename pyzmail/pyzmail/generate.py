@@ -23,12 +23,14 @@ import os
 import sys
 import time
 import smtplib, socket
+import email.charset
 import email.encoders
 import email.header
 import email.utils
 import email.mime.base
 import email.mime.text
 import email.mime.multipart
+import email.mime.nonmultipart
 
 import utils
 
@@ -112,9 +114,16 @@ def build_mimetext_part(content, charset, mime_subtype=u'plain', use_quoted_prin
     if not use_quoted_printable:
         return email.mime.text.MIMEText(content, mime_subtype, charset)
 
-    mime_text = email.mime.text.MIMEText(None, mime_subtype)
-    mime_text.replace_header('Content-Transfer-Encoding', 'quoted-printable')
-    mime_text.set_payload(content, charset)
+    qp_charset = email.charset.Charset(charset)
+    qp_charset.body_encoding = email.charset.QP
+
+    # Workaround to get minimal quoted-printable encoding with Python 2 which
+    # is surprisingly hard.
+    # https://stackoverflow.com/a/14939500/138526
+    mime_text = email.mime.nonmultipart.MIMENonMultipart('text', mime_subtype, charset=charset)
+    mime_text.set_payload(content, charset=qp_charset)
+    # with Python 3.5 this could be simplified ("_charset also accepts Charset instances")
+    # mime_text = email.mime.text.MIMEText(content, mime_subtype, _charset=qp_charset)
     return mime_text
 
 def build_mime_part(data, maintype, subtype, charset, use_quoted_printable=False):
