@@ -423,7 +423,7 @@ def complete_mail(message, sender, recipients, subject, default_charset, cc=[], 
         # setting message_id_string to something like 'foo@my.host.example'.
         # The code then removes the automatically appended internal hostname.
         if '@' in message_id_string:
-            msg_id = msg_id.rsplit('@', 1)[0]
+            msg_id = msg_id.rsplit('@', 1)[0] + '>'
             # the following assertion should trigger if Python handles
             # duplicate @ items in make_msgid().
             assert '@' in msg_id, ('No @ in message id %r' % msg_id)
