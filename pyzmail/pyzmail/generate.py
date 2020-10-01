@@ -414,8 +414,12 @@ def complete_mail(message, sender, recipients, subject, default_charset, cc=[], 
         msg_id = None
     else:
         msg_id = email.utils.make_msgid(message_id_string)
-        # make_msgid() always appends the local host name - however some users
-        # might not want to expose internal host names.
+        # make_msgid() always appends the local host name in Python 2
+        # (in Python 3.2+ there is an additional "domain" parameter which could
+        # be used to simplify this code).
+        #
+        # Appending the local host name can expose internal host names which
+        # might be unwanted.
         # Example: The web service is behind a DDoS protection service which
         # works only on a DNS layer and the internal host name might resolve to
         # the real IP without DDoS protection.
