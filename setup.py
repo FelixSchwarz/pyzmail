@@ -98,42 +98,13 @@ if 'py2exe' in sys.argv and os.name=='nt':
         py2exe_options.update({ 'bundle_files': 1, })
         extra_options.update({ 'zipfile': None, }) # don't build a separate zip file with all libraries, put them all in the .exe
 
-data_files.append( (doc_dir, [ 'README.txt', 'Changelog.txt', 'LICENSE.txt']) )
+data_files.append( (doc_dir, [ 'README.md', 'Changelog.txt', 'LICENSE.txt']) )
 
-setup(name='pyzmail',
+setup(
       version=version,
-      author='Alain Spineux',
-      author_email='alain.spineux@gmail.com',
-      url='http://www.magiksys.net/pyzmail',
-      keywords= 'email',
 #      maintainer = 'email', #
-      description='Python easy mail library, to parse, compose and send emails',
-      long_description='pyzmail is a high level mail library for Python 2.x & 3.x. '
-                       'It provides functions and classes that help to parse, '
-                       'compose and send emails. pyzmail exists because their '
-                       'is no reasons that handling mails with Python would '
-                       'be more difficult than with Outlook or Thunderbird. '
-                       'pyzmail hide the difficulties of managing the MIME '
-                       'structure and of the encoding/decoding for '
-                       'internationalized emails. '
-                       'pyzmail is well documented, has a lot of code samples '
-                       'and include 2 scripts: pyzsendmail and pyzinfomail',
-      license='LGPL',
-      packages=[ 'pyzmail', 'pyzmail.tests' ],
       test_suite = 'pyzmail.tests',
-      scripts=[ 'scripts/pyzsendmail', 'scripts/pyzinfomail' ],
       data_files=data_files,
-      classifiers=["Intended Audience :: Developers",
-                  "License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)",
-                  "Operating System :: OS Independent",
-                  "Topic :: Communications :: Email",
-                  "Topic :: System :: Networking",
-                  "Topic :: Internet",
-                  "Intended Audience :: Developers",
-                  "Programming Language :: Python",
-                  "Programming Language :: Python :: 2",
-                  "Programming Language :: Python :: 3",
-                  ],
       cmdclass = cmdclass,
       **extra_options)
 

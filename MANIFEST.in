@@ -1,4 +1,4 @@
-include README.txt Changelog.txt LICENSE.txt
+include README.md Changelog.txt LICENSE.txt
 include Makefile MANIFEST.in epydoc.css
 include man/*
 include docs/Makefile
