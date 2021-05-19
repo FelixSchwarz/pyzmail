@@ -49,7 +49,9 @@ copyright = u'2011, Alain Spineux'
 #
 # The short X.Y version.
 
-for line in open('../../pyzmail/version.py'):
+THIS_DIR = os.path.dirname(__file__)
+VERSION_PY = os.path.join(THIS_DIR, '..', '..', 'pyzmail', 'version.py')
+for line in open(VERSION_PY):
     if line.startswith("__version__="):
         version=line[13:].rstrip()[:-1]
         break
