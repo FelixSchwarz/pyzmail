@@ -285,6 +285,7 @@ def load_tests(loader, tests, ignore):
     if sys.version_info<(3, 0):
         tests.addTests(doctest.DocTestSuite(pyzmail.parse))
     return tests
+load_tests.__test__ = False
 
 def additional_tests():
     # Add doctest for python 2.6 and below
