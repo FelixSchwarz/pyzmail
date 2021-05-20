@@ -28,10 +28,6 @@ class Msg:
             return []
 
 class TestParse(unittest.TestCase):
-
-    def setUp(self):
-        pass
-
     def test_decode_mail_header(self):
         """test decode_mail_header()"""
         self.assertEqual(decode_mail_header(''), u'')
@@ -290,16 +286,8 @@ bo\xc3\xaete mail = mailbox
 
 # Add doctest
 def load_tests(loader, tests, ignore):
-    # this works with python 2.7 and 3.x
-    if sys.version_info<(3, 0):
+    if six.PY2:
         tests.addTests(doctest.DocTestSuite(pyzmail.parse))
     return tests
 load_tests.__test__ = False
-
-def additional_tests():
-    # Add doctest for python 2.6 and below
-    if sys.version_info<(2, 7):
-        return doctest.DocTestSuite(pyzmail.parse)
-    else:
-        return unittest.TestSuite()
 

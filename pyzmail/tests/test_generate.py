@@ -6,10 +6,6 @@ import pyzmail
 from pyzmail.generate import *
 
 class TestGenerate(unittest.TestCase):
-
-    def setUp(self):
-        pass
-
     def test_format_addresses(self):
         """test format_addresse"""
         self.assertEqual('foo@example.com', str(format_addresses([ 'foo@example.com', ])))
@@ -26,9 +22,3 @@ def load_tests(loader, tests, ignore):
     return tests
 load_tests.__test__ = False
 
-def additional_tests():
-    # Add doctest for python 2.6 and below
-    if sys.version_info<(2, 7):
-        return doctest.DocTestSuite(pyzmail.generate)
-    else:
-        return unittest.TestSuite()

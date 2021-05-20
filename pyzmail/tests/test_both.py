@@ -9,11 +9,8 @@ import pyzmail
 from pyzmail.generate import *
 from pyzmail.parse import *
 
+
 class TestBoth(unittest.TestCase):
-
-    def setUp(self):
-        pass
-
     def test_compose_and_parse(self):
         """test generate and parse"""
 
