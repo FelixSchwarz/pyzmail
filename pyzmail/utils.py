@@ -10,7 +10,14 @@ Various functions used by other modules
 @var invalid_windows_name: a list of unauthorized filenames under Windows
 """
 
+from __future__ import absolute_import, print_function
+
 import sys
+
+import six
+
+
+__all__ = ['handle_filename_collision', 'is_usascii', 'sanitize_filename']
 
 invalid_chars_in_filename=b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f' \
                           b'\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f' \
@@ -59,8 +66,7 @@ def sanitize_filename(filename, alt_name, alt_ext):
     if not filename:
         return alt_name+alt_ext
 
-    if ((sys.version_info<(3, 0) and isinstance(filename, unicode)) or \
-        (sys.version_info>=(3, 0) and isinstance(filename, str))):
+    if isinstance(filename, six.text_type):
         filename=filename.encode('ascii', 'ignore')
 
     filename=filename.translate(None, invalid_chars_in_filename)

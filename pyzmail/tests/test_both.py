@@ -1,4 +1,10 @@
+
+from __future__ import absolute_import, print_function
+
 import unittest
+
+import six
+
 import pyzmail
 from pyzmail.generate import *
 from pyzmail.parse import *
@@ -64,7 +70,7 @@ class TestBoth(unittest.TestCase):
             if mailpart.is_body:
                 self.assertEqual(mailpart.content_id, None)
                 self.assertEqual(mailpart.filename, None)
-                self.assertEqual(type(mailpart.sanitized_filename), str)
+                self.assertTrue(isinstance(mailpart.sanitized_filename, six.string_types))
                 if mailpart.type=='text/plain':
                     self.assertEqual(mailpart.get_payload(), text_content.encode(text_encoding))
                 else:
@@ -90,7 +96,7 @@ class TestBoth(unittest.TestCase):
                 if found:
                     self.assertEqual(mailpart.type, attach[1]+'/'+attach[2])
                     payload=mailpart.get_payload()
-                    if attach[1]=='text' and attach[4] and isinstance(attach[0], unicode):
+                    if attach[1]=='text' and attach[4] and isinstance(attach[0], six.text_type):
                         payload=payload.decode(attach[4])
                     self.assertEqual(payload, attach[0])
                 else:

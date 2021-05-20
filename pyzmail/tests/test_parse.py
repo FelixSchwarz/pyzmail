@@ -1,4 +1,17 @@
+
+from __future__ import absolute_import, print_function
+
+import email.charset
+from io import BytesIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 import unittest, doctest
+import sys
+
+import six
+
 import pyzmail
 from pyzmail.parse import *
 
@@ -259,18 +272,14 @@ bo\xc3\xaete mail = mailbox
             check(PyzMessage.factory(input))
             check(message_from_bytes(input))
 
-            import io
-            check(PyzMessage.factory(io.BytesIO(input)))
-            check(message_from_binary_file(io.BytesIO(input)))
+            check(PyzMessage.factory(BytesIO(input)))
+            check(message_from_binary_file(BytesIO(input)))
 
-        if isinstance(input, basestring):
-
+        if isinstance(input, six.string_types):
             check(PyzMessage.factory(input))
             check(message_from_string(input))
-
-            import StringIO
-            check(PyzMessage.factory(StringIO.StringIO(input)))
-            check(message_from_file(StringIO.StringIO(input)))
+            check(PyzMessage.factory(StringIO(input)))
+            check(message_from_file(StringIO(input)))
 
     def test_pyzmessage_factories(self):
         """test PyzMessage class different sources"""

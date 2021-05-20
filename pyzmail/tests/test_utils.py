@@ -1,4 +1,6 @@
 import unittest, doctest
+import sys
+
 import pyzmail
 from pyzmail.utils import *
 

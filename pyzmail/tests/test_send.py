@@ -1,5 +1,8 @@
 import threading, smtpd, asyncore, socket, smtplib, time
 import unittest
+
+import six
+
 import pyzmail
 from pyzmail.generate import *
 

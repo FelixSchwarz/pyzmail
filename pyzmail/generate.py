@@ -17,6 +17,8 @@ For short:
 ... #doctest: +SKIP
 """
 
+from __future__ import absolute_import, print_function
+
 from collections import namedtuple
 import mimetypes
 import os
@@ -32,7 +34,7 @@ import email.mime.text
 import email.mime.multipart
 import email.mime.nonmultipart
 
-import utils
+from . import utils
 
 def format_addresses(addresses, header_name=None, charset=None):
     """
@@ -64,22 +66,22 @@ def format_addresses(addresses, header_name=None, charset=None):
     @return: the encoded list of formated addresses separated by commas,
     ready to use as I{Header} value.
 
-    >>> print format_addresses([('John', 'john@foo.com') ], 'From', 'us-ascii').encode()
+    >>> print(format_addresses([('John', 'john@foo.com') ], 'From', 'us-ascii').encode())
     John <john@foo.com>
-    >>> print format_addresses([(u'l\\xe9o', 'leo@foo.com') ], 'To', 'iso-8859-1').encode()
+    >>> print(format_addresses([(u'l\\xe9o', 'leo@foo.com') ], 'To', 'iso-8859-1').encode())
     =?iso-8859-1?q?l=E9o?= <leo@foo.com>
     >>> print format_addresses([(u'l\\xe9o', 'leo@foo.com') ], 'To', 'us-ascii').encode()
     ... # don't work in 3.X because charset is more than a hint
     ... #doctest: +SKIP
     =?utf-8?q?l=C3=A9o?= <leo@foo.com>
     >>> # because u'l\xe9o' cannot be encoded into us-ascii, utf8 is used instead
-    >>> print format_addresses([('No\\xe9', 'noe@f.com'), (u'M\u0101ori', 'maori@b.com')  ], 'Cc', 'iso-8859-1').encode()
+    >>> print(format_addresses([('No\\xe9', 'noe@f.com'), (u'M\u0101ori', 'maori@b.com')  ], 'Cc', 'iso-8859-1').encode())
     ... # don't work in 3.X because charset is more than a hint
     ... #doctest: +SKIP
     =?iso-8859-1?q?No=E9?= <noe@f.com> , =?utf-8?b?TcSBb3Jp?= <maori@b.com>
     >>> # 'No\xe9' is already encoded into iso-8859-1, but u'M\u0101ori' cannot be encoded into iso-8859-1
     >>> # then utf8 is used here
-    >>> print format_addresses(['a@bar.com', ('John', 'john@foo.com') ], 'From', 'us-ascii').encode()
+    >>> print(format_addresses(['a@bar.com', ('John', 'john@foo.com') ], 'From', 'us-ascii').encode())
     a@bar.com , John <john@foo.com>
     """
     header=email.header.Header(charset=charset, header_name=header_name)
@@ -259,7 +261,7 @@ def build_mail(text, html=None, attachments=[], embeddeds=[], use_quoted_printab
 
     >>> mail=build_mail(('Hello world', 'us-ascii'), attachments=[('attached', 'text', 'plain', 'text.txt', 'us-ascii')])
     >>> mail.set_boundary('===limit1==')
-    >>> print mail.as_string(unixfrom=False)
+    >>> print(mail.as_string(unixfrom=False))
     Content-Type: multipart/mixed; boundary="===limit1=="
     MIME-Version: 1.0
     <BLANKLINE>
@@ -379,7 +381,7 @@ def complete_mail(message, sender, recipients, subject, default_charset, cc=[], 
     >>> payload, mail_from, rcpt_to, msg_id=complete_mail(msg, ('Me', 'me@foo.com'),
     ... [ ('Him', 'him@bar.com'), ], 'Non unicode subject', 'iso-8859-1',
     ... cc=['her@bar.com',], date=1313558269, headers=[('User-Agent', u'pyzmail'), ])
-    >>> print payload
+    >>> print(payload)
     ... # 3.X encode  User-Agent: using 'iso-8859-1' even if it contains only us-asccii
     ... # doctest: +ELLIPSIS
     Content-Type: text/plain; charset="us-ascii"
@@ -393,7 +395,7 @@ def complete_mail(message, sender, recipients, subject, default_charset, cc=[], 
     User-Agent: ...pyzmail...
     <BLANKLINE>
     The text.
-    >>> print 'mail_from=%r rcpt_to=%r' % (mail_from, rcpt_to)
+    >>> print('mail_from=%r rcpt_to=%r' % (mail_from, rcpt_to))
     mail_from='me@foo.com' rcpt_to=['him@bar.com', 'her@bar.com']
     """
     def getaddr(address):
@@ -403,7 +405,7 @@ def complete_mail(message, sender, recipients, subject, default_charset, cc=[], 
             return address
 
     mail_from=getaddr(sender[1])
-    rcpt_to=map(getaddr, recipients)
+    rcpt_to = list(map(getaddr, recipients))
     rcpt_to.extend(map(getaddr, cc))
     rcpt_to.extend(map(getaddr, bcc))
 
@@ -514,7 +516,7 @@ def send_mail2(payload, mail_from, rcpt_to, smtp_host, smtp_port=25, smtp_mode='
     finally:
         try:
             smtp.quit()
-        except Exception, e:
+        except Exception as e:
             pass
 
     return ret
@@ -591,21 +593,21 @@ def send_mail(payload, mail_from, rcpt_to, smtp_host, smtp_port=25, smtp_mode='n
     error=dict()
     try:
         ret=send_mail2(payload, mail_from, rcpt_to, smtp_host, smtp_port, smtp_mode, smtp_login, smtp_password)
-    except (socket.error, ), e:
+    except (socket.error, ) as e:
         error='server %s:%s not responding: %s' % (smtp_host, smtp_port, e)
-    except smtplib.SMTPAuthenticationError, e:
+    except smtplib.SMTPAuthenticationError as e:
         error='authentication error: %s' % (e, )
-    except smtplib.SMTPRecipientsRefused, e:
+    except smtplib.SMTPRecipientsRefused as e:
         # code, error=e.recipients[recipient_addr]
         error='all recipients refused: '+', '.join(e.recipients.keys())
-    except smtplib.SMTPSenderRefused, e:
+    except smtplib.SMTPSenderRefused as e:
         # e.sender, e.smtp_code, e.smtp_error
         error='sender refused: %s' % (e.sender, )
-    except smtplib.SMTPDataError, e:
+    except smtplib.SMTPDataError as e:
         error='SMTP protocol mismatch: %s' % (e, )
-    except smtplib.SMTPHeloError, e:
+    except smtplib.SMTPHeloError as e:
         error="server didn't reply properly to the HELO greeting: %s" % (e, )
-    except smtplib.SMTPException, e:
+    except smtplib.SMTPException as e:
         error='SMTP error: %s' % (e, )
 #    except Exception, e:
 #        raise # unknown error
