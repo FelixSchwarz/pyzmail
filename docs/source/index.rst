@@ -10,7 +10,7 @@ pyzmail: Python easy mail library
 
 **pyzmail** is a **high level** mail library for Python. It provides functions and
 classes that help for **reading**, **composing** and **sending** emails. **pyzmail**
-exists because their is no reasons that handling mails with Python would be more
+exists because there is no reason that handling mails with Python should be more
 difficult than with popular mail clients like Outlook or Thunderbird.
 **pyzmail** hides the complexity of the MIME structure and MIME
 encoding/decoding. It also make the problems of the internationalization
@@ -19,51 +19,32 @@ encoding/decoding simpler.
 Download and Install
 --------------------
 
-**pyzmail** is available for Python **2.6+** and **3.2+**
-from `pypi <http://pypi.python.org/pypi/pyzmail>`_ and can
-be easily installed using the `easy_install <http://peak.telecommunity.com/DevCenter/EasyInstall>`_
-successor named `distribute <http://packages.python.org/distribute/>`_
-and `pip <http://pip.openplans.org/>`_ using ::
+**pyzmail** is available for Python **2.7** and **3.6+**
+from `pypi <https://pypi.python.org/pypi/pyzmail>`_ and can
+be easily installed with `pip <https://pip.pypa.io/en/stable/>`_ using ::
 
     $ pip install pyzmail
 
-to quickly install **distribute** and **pip**, use ::
-
-    curl -O http://python-distribute.org/distribute_setup.py
-    python distribute_setup.py
-    easy_install pip
-
 **pyzmail** can be installed the old way from sources. Download the archive from
-`pypi <http://pypi.python.org/pypi/pyzmail>`_ and extract its content
+`pypi <https://pypi.python.org/pypi/pyzmail>`_ and extract its content
 into a directory. *cd* into this directory and run::
 
     > cd pyzmail-X.X.X
     > python setup.py install
-
-Binary version of the scripts for **Windows** pyzmail-|release|-win32.zip can
-be downloaded from `here <http://www.magiksys.net/download/pyzmail>`__.
 
 **pyzmail** sources are also available on **github**
 `https://github.com/aspineux/pyzmail <https://github.com/aspineux/pyzmail>`_
 
 Support for Python 3.x
 ----------------------
-.. sidebar:: Python 3.2+ supported
+.. sidebar:: Python 3.6+ supported
 
     .. image:: /_static/python-3.png
 
-Python **3.2** is supported and has been tested. Python 3.0 and 3.1 are not supported
-because none of them provide functions to handle 8bits encoded emails like in **3.2**
-( :py:func:`email.message_from_bytes` & :py:func:`email.message_from_binary_file` )
+Python **3.6** - **3.9** are supported and have been tested.
 
 At installation time, **pyzmail** sources are automatically converted by
 `distribute <http://packages.python.org/distribute/>`_ using **2to3**.
-
-Unfortunately, **scripts** are not converted in the process. You can convert them
-using **2to3** yourself *(adapt* **paths** *to fit you configuration)*::
-
-    /opt/python-3.2.2/bin/2to3 --no-diffs --write --nobackups /opt/python-3.2.2/bin/pyzinfomail
-    /opt/python-3.2.2/bin/2to3 --no-diffs --write --nobackups /opt/python-3.2.2/bin/pyzsendmail
 
 
 Use pyzmail
@@ -103,7 +84,7 @@ Documentation
 You can find lots of sample inside the *docstrings* but also in the *tests*
 directory.
 
-The documentation, samples, docstring and articles are all fitted for python 2.x.
+The documentation, samples, docstring and articles are all fitted for python 2.7.
 Some occasional hint give some tricks about Python 3.x.
 
 Articles
@@ -398,8 +379,7 @@ Features:
 
 Read the :doc:`manual <man/pyzsendmail>` for more.
 
-Under *Windows* **pyzsendmail.exe** can replace the now old `blat.exe <http://www.blat.net/>`_ and
-`bmail.exe <http://www.beyondlogic.org/solutions/cmdlinemail/cmdlinemail.htm>`_.
+Under *Windows* **pyzsendmail.exe** can replace the now old `blat.exe <http://www.blat.net/>`_.
 
 
 pyzinfomail
@@ -412,7 +392,7 @@ from a file and printing most important information. Mostly to show how to use
 License
 -------
 
-**pyzmail** iis released under the GNU Lesser General Public License ( LGPL ).
+**pyzmail** is released under the GNU Lesser General Public License ( LGPL ).
 
 Links
 -----
@@ -420,8 +400,8 @@ Links
 More links about parsing and writing mail in python
 
     - `formataddr() and unicode <http://tillenius.me/blog/2011/02/11/formataddr-and-unicode/>`_
-    - `Sending Unicode emails in Python <http://mg.pov.lt/blog/unicode-emails-in-python.html>`_
-    - `Sending Email with smtplib <http://www.blog.pythonlibrary.org/2010/05/14/how-to-send-email-with-python/>`_
+    - `Sending Unicode emails in Python <https://mg.pov.lt/blog/unicode-emails-in-python.html>`_
+    - `Sending Email with smtplib <https://www.blog.pythonlibrary.org/2010/05/14/how-to-send-email-with-python/>`_
 
 
 ..
