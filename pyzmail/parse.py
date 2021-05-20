@@ -183,7 +183,6 @@ def _friendly_header(header):
     @returns: the converter header
     """
 
-    save=header
     if isinstance(header, email.header.Header):
         header=str(header)
 
