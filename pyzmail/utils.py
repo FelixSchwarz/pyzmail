@@ -12,8 +12,6 @@ Various functions used by other modules
 
 from __future__ import absolute_import, print_function
 
-import sys
-
 import six
 
 
@@ -81,7 +79,7 @@ def sanitize_filename(filename, alt_name, alt_ext):
             filename=filename[:len(name)]+b'A'+filename[len(name):]
             break
 
-    if sys.version_info>=(3, 0):
+    if six.PY3:
         # back to string
         filename=filename.decode('us-ascii')
 

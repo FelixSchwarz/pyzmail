@@ -129,8 +129,7 @@ class MailPart:
         payload=None
         if self.type.startswith('message/'):
             # I don't use msg.as_string() because I want to use mangle_from_=False
-            if sys.version_info<(3, 0):
-                # python 2.x
+            if six.PY2:
                 from email.generator import Generator
                 fp = StringIO()
                 g = Generator(fp, mangle_from_=False)
@@ -227,7 +226,7 @@ def decode_mail_header(value, default_charset='us-ascii'):
             # email.header.decode_header('a') -> [('a', None)]
             # email.header.decode_header('a =?ISO-8859-1?Q?foo?= b')
             # --> [('a', None), ('foo', 'iso-8859-1'), ('b', None)]
-            if (charset is None and sys.version_info>=(3, 0)):
+            if (charset is None) and six.PY3:
                 # Py3
                 if isinstance(text, str):
                     # convert Py3 string into bytes string to be sure their is no
@@ -604,8 +603,7 @@ class PyzMessage(email.message.Message):
         if isinstance(input, email.message.Message):
             return input
 
-        if sys.version_info<(3, 0):
-            # python 2.x
+        if six.PY2:
             if isinstance(input, six.string_types):
                 return email.message_from_string(input)
             elif hasattr(input, 'read') and hasattr(input, 'readline'):
@@ -807,8 +805,6 @@ def message_from_binary_file(fp, *args, **kws):
 
 
 if __name__ == "__main__":
-    import sys
-
     if len(sys.argv)<=1:
         print('usage : %s filename' % sys.argv[0])
         print('read an email from file and display a resume of its content')

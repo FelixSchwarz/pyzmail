@@ -22,7 +22,6 @@ from __future__ import absolute_import, print_function
 from collections import namedtuple
 import mimetypes
 import os
-import sys
 import time
 import smtplib, socket
 import email.charset
@@ -33,6 +32,8 @@ import email.mime.base
 import email.mime.text
 import email.mime.multipart
 import email.mime.nonmultipart
+
+import six
 
 from . import utils
 
@@ -516,8 +517,7 @@ def send_mail2(payload, mail_from, rcpt_to, smtp_host, smtp_port=25, smtp_mode='
             smtp.starttls()
 
     if smtp_login and smtp_password:
-        if sys.version_info<(3, 0):
-            # python 2.x
+        if six.PY2:
             # login and password must be encoded
             # because HMAC used in CRAM_MD5 require non unicode string
             smtp.login(smtp_login.encode('utf-8'), smtp_password.encode('utf-8'))

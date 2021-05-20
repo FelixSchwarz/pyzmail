@@ -8,7 +8,6 @@ try:
 except ImportError:
     from io import StringIO
 import unittest, doctest
-import sys
 
 import six
 
@@ -41,7 +40,7 @@ class TestParse(unittest.TestCase):
         self.assertEqual(decode_mail_header('=?utf-8?b?RnJhbsOnYWlz?='), u'Fran\xe7ais')
         self.assertEqual(decode_mail_header('=?iso-8859-1?q?Courrier_=E8lectronique_?= =?utf8?q?Fran=C3=A7ais?='), u'Courrier \xe8lectronique Fran\xe7ais')
         self.assertEqual(decode_mail_header('=?iso-8859-1?q?Courrier_=E8lectronique_?= =?utf-8?b?RnJhbsOnYWlz?='), u'Courrier \xe8lectronique Fran\xe7ais')
-        if sys.version_info >= (3,):
+        if six.PY3:
             self.assertEqual(decode_mail_header('h_subject_q_iso_8858_1 : =?ISO-8859-1?Q?Fran=E7ais=E20accentu=E9?= !'), u'h_subject_q_iso_8858_1 : Fran\xe7ais\xe20accentu\xe9 !')
         else:
             # 2.X is a bit buggy and add white spaces
@@ -61,7 +60,7 @@ class TestParse(unittest.TestCase):
 
         # address already encoded into utf8 (bad)
         address=u'Ant\xf3nio Foo <a.foo@example.com>'.encode('utf8')
-        if sys.version_info<(3, 0):
+        if six.PY2:
             self.assertEqual([(u'Ant\ufffd\ufffdnio Foo', 'a.foo@example.com')], get_mail_addresses(Msg(address), 'to'))
         else:
             # Python 3.2 return header when surrogate characters are used in header
@@ -72,7 +71,7 @@ class TestParse(unittest.TestCase):
         import email.mime.image
 
         filename=u'Fran\xe7ais.png'
-        if sys.version_info<(3, 0):
+        if six.PY2:
             encoded_filename=filename.encode('iso-8859-1')
         else:
             encoded_filename=filename
@@ -135,7 +134,7 @@ ZGF0YQ==<HERE1>
 --===limit1==--
 """
 
-        if sys.version_info<(3, 0):
+        if six.PY2:
             expected_raw=expected_raw.replace('<HERE1>','')
         else:
             expected_raw=expected_raw.replace('<HERE1>','\n')
@@ -244,7 +243,7 @@ bo\xc3\xaete mail = mailbox
           b'The text.\n'
 
     def check_message_3(self, msg):
-        subject=u'Beno\ufffd\ufffdt & Ant\ufffd\ufffdnio' #  if sys.version_info<(3, 0) else u'Beno??t & Ant??nio'
+        subject=u'Beno\ufffd\ufffdt & Ant\ufffd\ufffdnio'
         self.assertEqual(msg.get_subject(), subject)
         self.assertEqual(msg.get_decoded_header('subject'), subject)
         self.assertEqual(msg.get_decoded_header('User-Agent'), u'pyzmail')
@@ -253,11 +252,11 @@ bo\xc3\xaete mail = mailbox
 
         to=msg.get_addresses('to')
         self.assertEqual(to[0][1], 'a.foo@example.com')
-        self.assertEqual(to[0][0], u'Ant\ufffd\ufffdnio Foo' if sys.version_info<(3, 0) else u'Ant??nio Foo')
+        self.assertEqual(to[0][0], u'Ant\ufffd\ufffdnio Foo' if six.PY2 else u'Ant??nio Foo')
 
         cc=msg.get_addresses('cc')
         self.assertEqual(cc[0][1], 'benoit@foo.com')
-        self.assertEqual(cc[0][0], u'Beno\ufffd\ufffdt' if sys.version_info<(3, 0) else u'Beno??t')
+        self.assertEqual(cc[0][0], u'Beno\ufffd\ufffdt' if six.PY2 else u'Beno??t')
         self.assertEqual(cc[1], ('d@foo.com', 'd@foo.com'))
 
         self.assertEqual(len(msg.mailparts), 1)
@@ -267,7 +266,7 @@ bo\xc3\xaete mail = mailbox
 
     def check_pyzmessage_factories(self, input, check):
         """test PyzMessage from different sources"""
-        if isinstance(input, bytes) and sys.version_info>=(3, 2):
+        if isinstance(input, bytes) and six.PY3:
             check(PyzMessage.factory(input))
             check(message_from_bytes(input))
 
