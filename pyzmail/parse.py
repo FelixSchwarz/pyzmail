@@ -136,7 +136,6 @@ class MailPart:
                 g.flatten(self.part, unixfrom=False)
                 payload=fp.getvalue()
             else:
-                # support only for python >= 3.2
                 from email.generator import BytesGenerator
                 import io
                 fp = io.BytesIO()
@@ -614,11 +613,9 @@ class PyzMessage(email.message.Message):
             if isinstance(input, str):
                 return email.message_from_string(input)
             elif isinstance(input, bytes):
-                # python >= 3.2 only
                 return email.message_from_bytes(input)
             elif hasattr(input, 'read') and hasattr(input, 'readline'):
                 if hasattr(input, 'encoding'):
-                    # python >= 3.2 only
                     return email.message_from_file(input)
                 else:
                     return email.message_from_binary_file(input)
