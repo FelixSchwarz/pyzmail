@@ -1,9 +1,7 @@
-import threading, smtpd, asyncore, socket, smtplib, time
+import threading, smtpd, asyncore, time
 import unittest
 
-import pyzmail
-from pyzmail.generate import *
-
+from pyzmail import compose_mail, send_mail
 
 smtpd_addr='127.0.0.1'
 smtpd_port=32525

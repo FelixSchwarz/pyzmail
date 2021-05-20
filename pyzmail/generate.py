@@ -36,6 +36,19 @@ import email.mime.nonmultipart
 
 from . import utils
 
+
+__all__ = [
+    'build_mail',
+    'complete_mail',
+    'compose_mail',
+    'format_addresses',
+    'guess_mime_type',
+    'send_mail',
+    'send_mail2',
+    'Attachment',
+    'EmbeddedFile',
+]
+
 def format_addresses(addresses, header_name=None, charset=None):
     """
     Convert a list of addresses into a MIME-compliant header for a From, To, Cc,

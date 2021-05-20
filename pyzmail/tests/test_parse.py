@@ -13,7 +13,10 @@ import sys
 import six
 
 import pyzmail
-from pyzmail.parse import *
+from pyzmail import (message_from_binary_file, message_from_bytes,
+    message_from_file, message_from_string, PyzMessage)
+from pyzmail.parse import (decode_mail_header, get_filename, get_mail_addresses,
+    get_mail_parts)
 
 
 class Msg:

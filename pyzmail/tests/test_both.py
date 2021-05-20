@@ -1,13 +1,14 @@
 
 from __future__ import absolute_import, print_function
 
+import email
+import time
 import unittest
 
 import six
 
 import pyzmail
-from pyzmail.generate import *
-from pyzmail.parse import *
+from pyzmail import PyzMessage
 
 
 class TestBoth(unittest.TestCase):
