@@ -3,13 +3,11 @@
 # (c) alain.spineux@gmail.com
 # http://www.magiksys.net/pyzmail
 
+import os
 import sys
 
-import os, shutil
-
 try:
-    import setuptools
-    from setuptools import setup, find_packages
+    from setuptools import setup
 except ImportError:
     from distutils.core import setup
 
@@ -17,8 +15,8 @@ basename='pyzmail'
 # retrieve $version
 version=''
 for line in open('pyzmail/version.py'):
-    if line.startswith("__version__="):
-        version=line[13:].rstrip()[:-1]
+    if line.startswith("__version__ ="):
+        version=line[15:].rstrip()[:-1]
         break
 
 if not version:

@@ -21,6 +21,7 @@ Useful functions to parse emails
 from __future__ import absolute_import, print_function
 
 import re
+
 try:
     from StringIO import StringIO
 except ImportError:
@@ -59,17 +60,18 @@ __all__ = [
 #    my $addr_spec  = qr{$local\@$domain};
 #
 # Python's translation
-atom_rfc2822=r"[a-zA-Z0-9_!#\$\%&'*+/=?\^`{}~|\-]+"
-atom_posfix_restricted=r"[a-zA-Z0-9_#\$&'*+/=?\^`{}~|\-]+" # without '!' and '%'
-atom=atom_rfc2822
-dot_atom=atom  +  r"(?:\."  +  atom  +  ")*"
-quoted=r'"(?:\\[^\r\n]|[^\\"])*"'
-local="(?:"  +  dot_atom  +  "|"  +  quoted  +  ")"
-domain_lit=r"\[(?:\\\S|[\x21-\x5a\x5e-\x7e])*\]"
-domain="(?:"  +  dot_atom  +  "|"  +  domain_lit  +  ")"
-addr_spec=local  +  "@"  +  domain
+atom_rfc2822 = r"[a-zA-Z0-9_!#\$\%&'*+/=?\^`{}~|\-]+"
+atom_posfix_restricted = r"[a-zA-Z0-9_#\$&'*+/=?\^`{}~|\-]+"  # without '!' and '%'
+atom = atom_rfc2822
+dot_atom = atom + r"(?:\." + atom + ")*"
+quoted = r'"(?:\\[^\r\n]|[^\\"])*"'
+local = "(?:" + dot_atom + "|" + quoted + ")"
+domain_lit = r"\[(?:\\\S|[\x21-\x5a\x5e-\x7e])*\]"
+domain = "(?:" + dot_atom + "|" + domain_lit + ")"
+addr_spec = local + "@" + domain
 # and the result
-email_address_re=re.compile('^'+addr_spec+'$')
+email_address_re = re.compile('^' + addr_spec + '$')
+
 
 class MailPart:
     """
@@ -101,23 +103,36 @@ class MailPart:
     @ivar type: the MIME type, like 'text/plain', 'image/png', 'application/msword' ...
     """
 
-    def __init__(self, part, filename=None, type=None, charset=None, content_id=None, description=None, disposition=None, sanitized_filename=None, is_body=None):
+    def __init__(
+        self,
+        part,
+        filename=None,
+        type=None,
+        charset=None,
+        content_id=None,
+        description=None,
+        disposition=None,
+        sanitized_filename=None,
+        is_body=None,
+    ):
         """
         Create an mail part and initialize all attributes
         """
-        self.part=part          # original python part
-        self.filename=filename  # filename in unicode (if any)
-        self.type=type          # the mime-type
-        self.charset=charset    # the charset (if any)
-        self.description=description    # if any
-        self.disposition=disposition    # 'inline', 'attachment' or None
-        self.sanitized_filename=sanitized_filename # cleanup your filename here (TODO)
-        self.is_body=is_body        # usually in (None, 'text/plain' or 'text/html')
-        self.content_id=content_id  # if any
+        self.part = part  # original python part
+        self.filename = filename  # filename in unicode (if any)
+        self.type = type  # the mime-type
+        self.charset = charset  # the charset (if any)
+        self.description = description  # if any
+        self.disposition = disposition  # 'inline', 'attachment' or None
+        self.sanitized_filename = (
+            sanitized_filename  # cleanup your filename here (TODO)
+        )
+        self.is_body = is_body  # usually in (None, 'text/plain' or 'text/html')
+        self.content_id = content_id  # if any
         if self.content_id:
             # strip '<>' to ease search and replace in "root" content (TODO)
             if self.content_id.startswith('<') and self.content_id.endswith('>'):
-                self.content_id=self.content_id[1:-1]
+                self.content_id = self.content_id[1:-1]
 
     def get_payload(self):
         """
@@ -126,45 +141,47 @@ class MailPart:
         something like C{part.get_payload().decode(part.charset)}
         """
 
-        payload=None
+        payload = None
         if self.type.startswith('message/'):
             # I don't use msg.as_string() because I want to use mangle_from_=False
             if six.PY2:
                 from email.generator import Generator
+
                 fp = StringIO()
                 g = Generator(fp, mangle_from_=False)
                 g.flatten(self.part, unixfrom=False)
-                payload=fp.getvalue()
+                payload = fp.getvalue()
             else:
                 from email.generator import BytesGenerator
                 import io
+
                 fp = io.BytesIO()
                 g = BytesGenerator(fp, mangle_from_=False)
                 g.flatten(self.part, unixfrom=False)
-                payload=fp.getvalue()
+                payload = fp.getvalue()
 
         else:
-            payload=self.part.get_payload(decode=True)
+            payload = self.part.get_payload(decode=True)
         return payload
 
     def __repr__(self):
-        st=u'MailPart<'
+        st = u'MailPart<'
         if self.is_body:
-            st+=u'*'
-        st+=self.type
+            st += u'*'
+        st += self.type
         if self.charset:
-            st+=' charset='+self.charset
+            st += ' charset=' + self.charset
         if self.filename:
-            st+=' filename='+self.filename
+            st += ' filename=' + self.filename
         if self.content_id:
-            st+=' content_id='+self.content_id
-        st+=' len=%d' % (len(self.get_payload()), )
-        st+=u'>'
+            st += ' content_id=' + self.content_id
+        st += ' len=%d' % (len(self.get_payload()),)
+        st += u'>'
         return st
 
 
+_line_end_re = re.compile('\r\n|\n\r|\n|\r')
 
-_line_end_re=re.compile('\r\n|\n\r|\n|\r')
 
 def _friendly_header(header):
     """
@@ -183,9 +200,9 @@ def _friendly_header(header):
     """
 
     if isinstance(header, email.header.Header):
-        header=str(header)
-
+        header = str(header)
     return re.sub(_line_end_re, ' ', header)
+
 
 def decode_mail_header(value, default_charset='us-ascii'):
     """
@@ -203,9 +220,8 @@ def decode_mail_header(value, default_charset='us-ascii'):
     u'Courrier \\xe8lectronique en Fran\\xe7ais'
     """
 
-#    value=_friendly_header(value)
     try:
-        headers=email.header.decode_header(value)
+        headers = email.header.decode_header(value)
     except email.errors.HeaderParseError:
         # this can append in email.base64mime.decode(), for example for this value:
         # '=?UTF-8?B?15HXmdeh15jXqNeVINeY15DXpteUINeTJ9eV16jXlSDXkdeg15XXldeUINem15PXpywg15TXptei16bXldei15nXnSDXqdecINek15zXmdeZ?==?UTF-8?B?157XldeR15nXnCwg157Xldek16Ig157Xl9eV15wg15HXodeV15bXnyDXk9ec15DXnCDXldeh15gg157Xl9eR16rXldeqINep15wg15HXmdeQ?==?UTF-8?B?15zXmNeZ?='
@@ -229,14 +245,15 @@ def decode_mail_header(value, default_charset='us-ascii'):
                 if isinstance(text, str):
                     # convert Py3 string into bytes string to be sure their is no
                     # non us-ascii chars and because next line expect byte string
-                    text=text.encode('us-ascii', 'replace')
+                    text = text.encode('us-ascii', 'replace')
             try:
-                headers[i]=text.decode(charset or 'us-ascii', 'replace')
+                headers[i] = text.decode(charset or 'us-ascii', 'replace')
             except LookupError:
                 # if the charset is unknown, force default
-                headers[i]=text.decode(default_charset, 'replace')
+                headers[i] = text.decode(default_charset, 'replace')
 
         return u"".join(headers)
+
 
 def get_mail_addresses(message, header_name):
     """
@@ -269,21 +286,24 @@ def get_mail_addresses(message, header_name):
     >>> get_mail_addresses(msg, 'to')
     [(u'A', 'a@foo.com'), (u'B', 'b@foo.com')]
     """
-    addrs=email.utils.getaddresses([ _friendly_header(h) for h in message.get_all(header_name, [])])
+    addrs = email.utils.getaddresses(
+        [_friendly_header(h) for h in message.get_all(header_name, [])]
+    )
     for i, (addr_name, addr) in enumerate(addrs):
         if not addr_name and addr:
             # only one string! Is it the address or the  address name ?
             # use the same for both and see later
-            addr_name=addr
+            addr_name = addr
 
         if is_usascii(addr):
             # address must be ascii only and must match address regex
             if not email_address_re.match(addr):
-                addr=''
+                addr = ''
         else:
-            addr=''
-        addrs[i]=(decode_mail_header(addr_name), addr)
+            addr = ''
+        addrs[i] = (decode_mail_header(addr_name), addr)
     return addrs
+
 
 def get_filename(part):
     """
@@ -321,20 +341,21 @@ def get_filename(part):
     <BLANKLINE>
     The text.
     """
-    filename=part.get_param('filename', None, 'content-disposition')
+    filename = part.get_param('filename', None, 'content-disposition')
     if not filename:
-        filename=part.get_param('name', None) # default is 'content-type'
+        filename = part.get_param('name', None)  # default is 'content-type'
 
     if filename:
         if isinstance(filename, tuple):
             # RFC 2231 must be used to encode parameters inside MIME header
-            filename=email.utils.collapse_rfc2231_value(filename).strip()
+            filename = email.utils.collapse_rfc2231_value(filename).strip()
         else:
             # But a lot of MUA erroneously use RFC 2047 instead of RFC 2231
             # in fact anybody missuse RFC2047 here !!!
-            filename=decode_mail_header(filename)
+            filename = decode_mail_header(filename)
 
     return filename
+
 
 def _search_message_content(contents, part):
     """
@@ -347,34 +368,36 @@ def _search_message_content(contents, part):
     @type part: inherit email.mime.base.MIMEBase
     @param part: the part of the mail to look inside recursively.
     """
-    type=part.get_content_type()
-    if part.is_multipart(): # type.startswith('multipart/'):
+    type = part.get_content_type()
+    if part.is_multipart():  # type.startswith('multipart/'):
         # explore only True 'multipart/*'
         # because 'messages/rfc822' are 'multipart/*' too but
         # must not be explored here
-        if type=='multipart/related':
+        if type == 'multipart/related':
             # the first part or the one pointed by start
-            start=part.get_param('start', None)
-            related_type=part.get_param('type', None)
+            start = part.get_param('start', None)
+            related_type = part.get_param('type', None)
             for i, subpart in enumerate(part.get_payload()):
-                if (not start and i==0) or (start and start==subpart.get('Content-Id')):
+                if (not start and i == 0) or (
+                    start and start == subpart.get('Content-Id')
+                ):
                     _search_message_content(contents, subpart)
                     return
-        elif type=='multipart/alternative':
+        elif type == 'multipart/alternative':
             # all parts are candidates and latest is the best
             for subpart in part.get_payload():
                 _search_message_content(contents, subpart)
-        elif type in ('multipart/report',  'multipart/signed'):
+        elif type in ('multipart/report', 'multipart/signed'):
             # only the first part is candidate
             try:
-                subpart=part.get_payload()[0]
+                subpart = part.get_payload()[0]
             except IndexError:
                 return
             else:
                 _search_message_content(contents, subpart)
                 return
 
-        elif type=='multipart/encrypted':
+        elif type == 'multipart/encrypted':
             # the second part is the good one, but we need to de-crypt it
             # using the first part. Do nothing
             return
@@ -385,18 +408,22 @@ def _search_message_content(contents, part):
             # I use a heuristic : if not already found, use first valid non
             # 'attachment' parts found
             for subpart in part.get_payload():
-                tmp_contents=dict()
+                tmp_contents = dict()
                 _search_message_content(tmp_contents, subpart)
                 for k, v in tmp_contents.items():
-                    if not subpart.get_param('attachment', None, 'content-disposition')=='':
+                    param_cd = subpart.get_param(
+                        'attachment', None, 'content-disposition'
+                    )
+                    if param_cd != '':
                         # if not an attachment, initiate value if not already found
                         contents.setdefault(k, v)
             return
     else:
-        contents[part.get_content_type().lower()]=part
+        contents[part.get_content_type().lower()] = part
         return
 
     return
+
 
 def search_message_content(mail):
     """
@@ -413,9 +440,10 @@ def search_message_content(mail):
     One part can be missing. The dictionay can aven be empty if none of the
     parts math the requirements to be considered as the content.
     """
-    contents=dict()
+    contents = dict()
     _search_message_content(contents, mail)
     return contents
+
 
 def get_mail_parts(msg):
     """
@@ -465,39 +493,60 @@ def get_mail_parts(msg):
     (u'image.png', 4)
 
     """
-    mailparts=[]
+    mailparts = []
 
     # retrieve messages of the email
-    contents=search_message_content(msg)
+    contents = search_message_content(msg)
     # reverse contents dict
-    parts=dict((v,k) for k, v in contents.items())
+    parts = dict((v, k) for k, v in contents.items())
 
     # organize the stack to handle deep first search
-    stack=[ msg, ]
+    stack = [
+        msg,
+    ]
     while stack:
-        part=stack.pop(0)
-        type=part.get_content_type()
+        part = stack.pop(0)
+        type = part.get_content_type()
         if type.startswith('message/'):
             # ('message/delivery-status', 'message/rfc822', 'message/disposition-notification'):
             # I don't want to explore the tree deeper her and just save source using msg.as_string()
             # but I don't use msg.as_string() because I want to use mangle_from_=False
-            filename=get_filename(part)
-            filename=filename if filename else 'message.eml'
-            mailparts.append(MailPart(part, filename=filename, type=type, charset=part.get_param('charset'), description=part.get('Content-Description')))
+            filename = get_filename(part)
+            filename = filename if filename else 'message.eml'
+            mailparts.append(
+                MailPart(
+                    part,
+                    filename=filename,
+                    type=type,
+                    charset=part.get_param('charset'),
+                    description=part.get('Content-Description'),
+                )
+            )
         elif part.is_multipart():
             # insert new parts at the beginning of the stack (deep first search)
-            stack[:0]=part.get_payload()
+            stack[:0] = part.get_payload()
         else:
-            charset=part.get_param('charset')
-            filename=get_filename(part)
+            charset = part.get_param('charset')
+            filename = get_filename(part)
 
-            disposition=None
-            if part.get_param('inline', None, 'content-disposition')=='':
-                disposition='inline'
-            elif part.get_param('attachment', None, 'content-disposition')=='':
-                disposition='attachment'
+            disposition = None
+            if part.get_param('inline', None, 'content-disposition') == '':
+                disposition = 'inline'
+            elif part.get_param('attachment', None, 'content-disposition') == '':
+                disposition = 'attachment'
 
-            mailparts.append(MailPart(part, filename=filename, type=type, charset=charset, content_id=part.get('Content-Id'), description=part.get('Content-Description'), disposition=disposition, is_body=parts.get(part, False)))
+            mailparts.append(
+                MailPart(
+                    part,
+                    filename=filename,
+                    type=type,
+                    charset=charset,
+                    content_id=part.get('Content-Id'),
+                    description=part.get('Content-Description'),
+                    disposition=disposition,
+                    is_body=parts.get(part, False),
+                )
+            )
 
     return mailparts
 
@@ -527,7 +576,16 @@ def decode_text(payload, charset, default_charset):
 
 
     """
-    for chset in [ charset, default_charset, 'ascii', 'utf-8', 'utf-16', 'windows-1252', 'cp850' ]:
+    charsets = (
+        charset,
+        default_charset,
+        'ascii',
+        'utf-8',
+        'utf-16',
+        'windows-1252',
+        'cp850',
+    )
+    for chset in charsets:
         if chset:
             try:
                 return payload.decode(chset), chset
@@ -535,9 +593,10 @@ def decode_text(payload, charset, default_charset):
                 pass
 
     if default_charset:
-        return payload.decode(chset, 'replace'), None
+        return (payload.decode(chset, 'replace'), None)
 
     return payload, None
+
 
 class PyzMessage(email.message.Message):
     """
@@ -634,7 +693,6 @@ class PyzMessage(email.message.Message):
         """
         return PyzMessage(PyzMessage.smart_parser(input))
 
-
     def __init__(self, message):
         """
         Initialize the object with data coming from I{message}.
@@ -643,34 +701,40 @@ class PyzMessage(email.message.Message):
         @param message: The message
         """
         if not isinstance(message, email.message.Message):
-            raise ValueError("message must inherit from email.message.Message use PyzMessage.factory() instead")
+            raise ValueError(
+                "message must inherit from email.message.Message use PyzMessage.factory() instead"
+            )
         self.__dict__.update(message.__dict__)
 
-        self.mailparts=get_mail_parts(self)
-        self.text_part=None
-        self.html_part=None
+        self.mailparts = get_mail_parts(self)
+        self.text_part = None
+        self.html_part = None
 
-        filenames=[]
+        filenames = []
         for part in self.mailparts:
-            ext=mimetypes.guess_extension(part.type)
+            ext = mimetypes.guess_extension(part.type)
             if not ext:
                 # default to .bin
-                ext='.bin'
-            elif ext=='.ksh':
+                ext = '.bin'
+            elif ext == '.ksh':
                 # guess_extension() is not very accurate, .txt is more
                 # appropriate than .ksh
-                ext='.txt'
+                ext = '.txt'
 
-            sanitized_filename=sanitize_filename(part.filename, part.type.split('/', 1)[0], ext)
-            sanitized_filename=handle_filename_collision(sanitized_filename, filenames)
+            sanitized_filename = sanitize_filename(
+                part.filename, part.type.split('/', 1)[0], ext
+            )
+            sanitized_filename = handle_filename_collision(
+                sanitized_filename, filenames
+            )
             filenames.append(sanitized_filename.lower())
-            part.sanitized_filename=sanitized_filename
+            part.sanitized_filename = sanitized_filename
 
-            if part.is_body=='text/plain':
-                self.text_part=part
+            if part.is_body == 'text/plain':
+                self.text_part = part
 
-            if part.is_body=='text/html':
-                self.html_part=part
+            if part.is_body == 'text/html':
+                self.html_part = part
 
     def get_addresses(self, name):
         """
@@ -698,7 +762,7 @@ class PyzMessage(email.message.Message):
         @returns: a list of tuple of the form C{[('Recipient Name', 'recipient.address@domain.com'), ...]}
         or an empty list if no header match that I{name}.
         """
-        value=get_mail_addresses(self, name)
+        value = get_mail_addresses(self, name)
         if value:
             return value[0]
         else:
@@ -733,12 +797,13 @@ class PyzMessage(email.message.Message):
         @returns: the value of the header having that I{name} or C{default} if no
         header have that name.
         """
-        value=self.get(name)
-        if value==None:
-            value=default
+        value = self.get(name)
+        if value is None:
+            value = default
         else:
-            value=decode_mail_header(value)
+            value = decode_mail_header(value)
         return value
+
 
 class PzMessage(PyzMessage):
     """
@@ -767,6 +832,7 @@ def message_from_string(s, *args, **kws):
     """
     return PyzMessage(email.message_from_string(s, *args, **kws))
 
+
 def message_from_file(fp, *args, **kws):
     """
     Read a file and parse its contents into a L{PyzMessage} object model.
@@ -776,6 +842,7 @@ def message_from_file(fp, *args, **kws):
     @return: the L{PyzMessage} object
     """
     return PyzMessage(email.message_from_file(fp, *args, **kws))
+
 
 def message_from_bytes(s, *args, **kws):
     """
@@ -787,6 +854,7 @@ def message_from_bytes(s, *args, **kws):
     @return: the L{PyzMessage} object
     """
     return PyzMessage(email.message_from_bytes(s, *args, **kws))
+
 
 def message_from_binary_file(fp, *args, **kws):
     """
@@ -801,32 +869,40 @@ def message_from_binary_file(fp, *args, **kws):
 
 
 if __name__ == "__main__":
-    if len(sys.argv)<=1:
+    if len(sys.argv) <= 1:
         print('usage : %s filename' % sys.argv[0])
         print('read an email from file and display a resume of its content')
         sys.exit(1)
 
-    msg=PyzMessage.factory(open(sys.argv[1], 'rb'))
+    msg = PyzMessage.factory(open(sys.argv[1], 'rb'))
 
-    print('Subject: %r' % (msg.get_subject(), ))
-    print('From: %r' % (msg.get_address('from'), ))
-    print('To: %r' % (msg.get_addresses('to'), ))
-    print('Cc: %r' % (msg.get_addresses('cc'), ))
-    print('Date: %r' % (msg.get_decoded_header('date', ''), ))
-    print('Message-Id: %r' % (msg.get_decoded_header('message-id', ''), ))
+    print('Subject: %r' % (msg.get_subject(),))
+    print('From: %r' % (msg.get_address('from'),))
+    print('To: %r' % (msg.get_addresses('to'),))
+    print('Cc: %r' % (msg.get_addresses('cc'),))
+    print('Date: %r' % (msg.get_decoded_header('date', ''),))
+    print('Message-Id: %r' % (msg.get_decoded_header('message-id', ''),))
 
     for mailpart in msg.mailparts:
         # don't forget to be careful to sanitize 'filename' and be careful
         # for filename collision, to before to save:
-        print('   %sfilename=%r type=%s charset=%s desc=%s size=%d' % ('*'if mailpart.is_body else ' ', mailpart.filename, mailpart.type, mailpart.charset, mailpart.part.get('Content-Description'), 0 if mailpart.get_payload()==None else len(mailpart.get_payload())))
+        payload = mailpart.get_payload()
+        print(
+            '   %sfilename=%r type=%s charset=%s desc=%s size=%d'
+            % (
+                '*' if mailpart.is_body else ' ',
+                mailpart.filename,
+                mailpart.type,
+                mailpart.charset,
+                mailpart.part.get('Content-Description'),
+                len(payload) if payload else 0,
+            )
+        )
 
-        if mailpart.is_body=='text/plain':
+        if mailpart.is_body == 'text/plain':
             # print first 3 lines
-            payload, used_charset=decode_text(mailpart.get_payload(), mailpart.charset, None)
+            payload, used_charset = decode_text(payload, mailpart.charset, None)
             for line in payload.split('\n')[:3]:
                 # be careful console can be unable to display unicode characters
                 if line:
                     print('       > ' + line)
-
-
-

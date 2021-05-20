@@ -14,10 +14,21 @@ from .parse import message_from_bytes, message_from_binary_file
 from .version import __version__
 
 # to help epydoc to display functions available from top of the package
-__all__= [ 'compose_mail', 'send_mail', 'send_mail2', 'email_address_re',
-           'PyzMessage', 'PzMessage', 'decode_text', '__version__',
-           'utils', 'generate', 'parse', 'version',
-           'message_from_string','message_from_file',
-           'message_from_binary_file', 'message_from_bytes',
-           ]
-
+__all__ = [
+    'compose_mail',
+    'send_mail',
+    'send_mail2',
+    'email_address_re',
+    'PyzMessage',
+    'PzMessage',
+    'decode_text',
+    '__version__',
+    'utils',
+    'generate',
+    'parse',
+    'version',
+    'message_from_string',
+    'message_from_file',
+    'message_from_binary_file',
+    'message_from_bytes',
+]

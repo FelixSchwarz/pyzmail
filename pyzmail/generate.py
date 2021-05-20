@@ -50,6 +50,7 @@ __all__ = [
     'EmbeddedFile',
 ]
 
+
 def format_addresses(addresses, header_name=None, charset=None):
     """
     Convert a list of addresses into a MIME-compliant header for a From, To, Cc,
@@ -98,14 +99,14 @@ def format_addresses(addresses, header_name=None, charset=None):
     >>> print(format_addresses(['a@bar.com', ('John', 'john@foo.com') ], 'From', 'us-ascii').encode())
     a@bar.com , John <john@foo.com>
     """
-    header=email.header.Header(charset=charset, header_name=header_name)
+    header = email.header.Header(charset=charset, header_name=header_name)
     for i, address in enumerate(addresses):
-        if i!=0:
+        if i != 0:
             # add separator between addresses
             header.append(',', charset='us-ascii')
 
         try:
-            name, addr=address
+            name, addr = address
         except ValueError:
             # address is not a tuple, their is no name, only email address
             header.append(address, charset='us-ascii')
@@ -113,7 +114,7 @@ def format_addresses(addresses, header_name=None, charset=None):
             # check if address name is a unicode or byte string in "pure" us-ascii
             if utils.is_usascii(name):
                 # name is a us-ascii byte string, i can use formataddr
-                formated_addr=email.utils.formataddr((name, addr))
+                formated_addr = email.utils.formataddr((name, addr))
                 # us-ascii must be used and not default 'charset'
                 header.append(formated_addr, charset='us-ascii')
             else:
@@ -126,7 +127,10 @@ def format_addresses(addresses, header_name=None, charset=None):
 
     return header
 
-def build_mimetext_part(content, charset, mime_subtype=u'plain', use_quoted_printable=False):
+
+def build_mimetext_part(
+    content, charset, mime_subtype=u'plain', use_quoted_printable=False
+):
     if not use_quoted_printable:
         return email.mime.text.MIMEText(content, mime_subtype, charset)
 
@@ -136,19 +140,19 @@ def build_mimetext_part(content, charset, mime_subtype=u'plain', use_quoted_prin
     # Workaround to get minimal quoted-printable encoding with Python 2 which
     # is surprisingly hard.
     # https://stackoverflow.com/a/14939500/138526
-    mime_text = email.mime.nonmultipart.MIMENonMultipart('text', mime_subtype, charset=charset)
+    mime_text = email.mime.nonmultipart.MIMENonMultipart(
+        'text', mime_subtype, charset=charset
+    )
     mime_text.set_payload(content, charset=qp_charset)
     # with Python 3.5 this could be simplified ("_charset also accepts Charset instances")
     # mime_text = email.mime.text.MIMEText(content, mime_subtype, _charset=qp_charset)
     return mime_text
 
+
 def build_mime_part(data, maintype, subtype, charset, use_quoted_printable=False):
     if maintype == 'text':
         part = build_mimetext_part(
-            data,
-            charset,
-            subtype,
-            use_quoted_printable=use_quoted_printable
+            data, charset, subtype, use_quoted_printable=use_quoted_printable
         )
     else:
         part = email.mime.base.MIMEBase(maintype, subtype)
@@ -157,10 +161,24 @@ def build_mime_part(data, maintype, subtype, charset, use_quoted_printable=False
     return part
 
 
-AttachmentType = namedtuple('Attachment', ('data', 'maintype', 'subtype', 'filename', 'charset'))
+AttachmentType = namedtuple(
+    'Attachment', ('data', 'maintype', 'subtype', 'filename', 'charset')
+)
+
+
 class Attachment(AttachmentType):
-    def __new__(cls, data, maintype='application', subtype='octet-stream', filename=None, charset=None, use_quoted_printable=False):
-        self = super(Attachment, cls).__new__(cls, data, maintype, subtype, filename, charset)
+    def __new__(
+        cls,
+        data,
+        maintype='application',
+        subtype='octet-stream',
+        filename=None,
+        charset=None,
+        use_quoted_printable=False,
+    ):
+        self = super(Attachment, cls).__new__(
+            cls, data, maintype, subtype, filename, charset
+        )
         self.use_quoted_printable = use_quoted_printable
         return self
 
@@ -171,16 +189,35 @@ class Attachment(AttachmentType):
         return cls(fp.read(), maintype=maintype, subtype=subtype, filename=filename)
 
     def as_mime_part(self):
-        part = build_mime_part(self.data, self.maintype, self.subtype, self.charset, use_quoted_printable=self.use_quoted_printable)
+        part = build_mime_part(
+            self.data,
+            self.maintype,
+            self.subtype,
+            self.charset,
+            use_quoted_printable=self.use_quoted_printable,
+        )
         part.add_header('Content-Disposition', 'attachment', filename=self.filename)
         return part
 
 
+EmbeddedFileType = namedtuple(
+    'EmbeddedFile', ('data', 'maintype', 'subtype', 'content_id', 'charset', 'filename')
+)
 
-EmbeddedFileType = namedtuple('EmbeddedFile', ('data', 'maintype', 'subtype', 'content_id', 'charset', 'filename'))
+
 class EmbeddedFile(EmbeddedFileType):
-    def __new__(cls, data, maintype='application', subtype='octet-stream', content_id=None, charset=None, filename=None):
-        self = super(EmbeddedFile, cls).__new__(cls, data, maintype, subtype, content_id, charset, filename)
+    def __new__(
+        cls,
+        data,
+        maintype='application',
+        subtype='octet-stream',
+        content_id=None,
+        charset=None,
+        filename=None,
+    ):
+        self = super(EmbeddedFile, cls).__new__(
+            cls, data, maintype, subtype, content_id, charset, filename
+        )
         return self
 
     @classmethod
@@ -201,7 +238,13 @@ class EmbeddedFile(EmbeddedFileType):
         )
 
     def as_mime_part(self):
-        part = build_mime_part(self.data, self.maintype, self.subtype, self.charset, use_quoted_printable=False)
+        part = build_mime_part(
+            self.data,
+            self.maintype,
+            self.subtype,
+            self.charset,
+            use_quoted_printable=False,
+        )
         part.add_header('Content-ID', '<%s>' % self.content_id)
         content_disposition = 'inline'
         if self.filename:
@@ -221,7 +264,9 @@ def guess_mime_type(fp, default_type='application/octet-stream'):
     return mime_type
 
 
-def build_mail(text, html=None, attachments=[], embeddeds=[], use_quoted_printable=False):
+def build_mail(
+    text, html=None, attachments=[], embeddeds=[], use_quoted_printable=False
+):
     """
     Generate the core of the email message regarding the parameters.
     The structure of the MIME email may vary, but the general one is as follow::
@@ -299,20 +344,26 @@ def build_mail(text, html=None, attachments=[], embeddeds=[], use_quoted_printab
     main = text_part = html_part = None
     if text:
         content, charset = text
-        main = text_part = build_mimetext_part(content, charset, u'plain', use_quoted_printable=use_quoted_printable)
+        main = text_part = build_mimetext_part(
+            content, charset, u'plain', use_quoted_printable=use_quoted_printable
+        )
 
     if html:
         content, charset = html
-        main = html_part = build_mimetext_part(content, charset, u'html', use_quoted_printable=use_quoted_printable)
+        main = html_part = build_mimetext_part(
+            content, charset, u'html', use_quoted_printable=use_quoted_printable
+        )
 
     if not text_part and not html_part:
-        main=text_part=email.mime.text.MIMEText('', 'plain', 'us-ascii')
+        main = text_part = email.mime.text.MIMEText('', 'plain', 'us-ascii')
     elif text_part and html_part:
         # need to create a multipart/alternative to include text and html version
-        main=email.mime.multipart.MIMEMultipart('alternative', None, [text_part, html_part])
+        main = email.mime.multipart.MIMEMultipart(
+            'alternative', None, [text_part, html_part]
+        )
 
     if embeddeds:
-        related=email.mime.multipart.MIMEMultipart('related')
+        related = email.mime.multipart.MIMEMultipart('related')
         related.attach(main)
         for part in embeddeds:
             if not isinstance(part, email.mime.base.MIMEBase):
@@ -322,24 +373,38 @@ def build_mail(text, html=None, attachments=[], embeddeds=[], use_quoted_printab
                     embedded_part = part
                 part = embedded_part.as_mime_part()
             related.attach(part)
-        main=related
+        main = related
 
     if attachments:
-        mixed=email.mime.multipart.MIMEMultipart('mixed')
+        mixed = email.mime.multipart.MIMEMultipart('mixed')
         mixed.attach(main)
         for part in attachments:
             if not isinstance(part, email.mime.base.MIMEBase):
                 if not hasattr(part, 'as_mime_part'):
-                    attachment = Attachment(*part, use_quoted_printable=use_quoted_printable)
+                    attachment = Attachment(
+                        *part, use_quoted_printable=use_quoted_printable
+                    )
                 else:
                     attachment = part
                 part = attachment.as_mime_part()
             mixed.attach(part)
-        main=mixed
+        main = mixed
 
     return main
 
-def complete_mail(message, sender, recipients, subject, default_charset, cc=[], bcc=[], message_id_string=None, date=None, headers=[]):
+
+def complete_mail(
+    message,
+    sender,
+    recipients,
+    subject,
+    default_charset,
+    cc=[],
+    bcc=[],
+    message_id_string=None,
+    date=None,
+    headers=[],
+):
     """
     Fill in the From, To, Cc, Subject, Date and Message-Id I{headers} of
     one existing message regarding the parameters.
@@ -412,27 +477,36 @@ def complete_mail(message, sender, recipients, subject, default_charset, cc=[], 
     >>> print('mail_from=%r rcpt_to=%r' % (mail_from, rcpt_to))
     mail_from='me@foo.com' rcpt_to=['him@bar.com', 'her@bar.com']
     """
+
     def getaddr(address):
         if isinstance(address, tuple):
             return address[1]
         else:
             return address
 
-    mail_from=getaddr(sender[1])
+    mail_from = getaddr(sender[1])
     rcpt_to = list(map(getaddr, recipients))
     rcpt_to.extend(map(getaddr, cc))
     rcpt_to.extend(map(getaddr, bcc))
 
-    message['From'] = format_addresses([ sender, ], header_name='from', charset=default_charset)
+    message['From'] = format_addresses(
+        [
+            sender,
+        ],
+        header_name='from',
+        charset=default_charset,
+    )
     if recipients:
-        message['To'] = format_addresses(recipients, header_name='to', charset=default_charset)
+        message['To'] = format_addresses(
+            recipients, header_name='to', charset=default_charset
+        )
     if cc:
         message['Cc'] = format_addresses(cc, header_name='cc', charset=default_charset)
     message['Subject'] = email.header.Header(subject, default_charset)
     if date:
-        utc_from_epoch=date
+        utc_from_epoch = date
     else:
-        utc_from_epoch=time.time()
+        utc_from_epoch = time.time()
     message['Date'] = email.utils.formatdate(utc_from_epoch, localtime=True)
 
     if not message_id_string:
@@ -455,20 +529,35 @@ def complete_mail(message, sender, recipients, subject, default_charset, cc=[], 
             msg_id = msg_id.rsplit('@', 1)[0] + '>'
             # the following assertion should trigger if Python handles
             # duplicate @ items in make_msgid().
-            assert '@' in msg_id, ('No @ in message id %r' % msg_id)
+            assert '@' in msg_id, 'No @ in message id %r' % msg_id
         message['Message-Id'] = msg_id
 
     for field, value in headers:
         if isinstance(value, email.header.Header):
-            message[field]=value
+            message[field] = value
         else:
-            message[field]=email.header.Header(value, default_charset)
+            message[field] = email.header.Header(value, default_charset)
 
-    payload=message.as_string()
+    payload = message.as_string()
 
     return payload, mail_from, rcpt_to, msg_id
 
-def compose_mail(sender, recipients, subject, default_charset, text, html=None, attachments=[], embeddeds=[], cc=[], bcc=[], message_id_string=None, date=None, headers=[]):
+
+def compose_mail(
+    sender,
+    recipients,
+    subject,
+    default_charset,
+    text,
+    html=None,
+    attachments=[],
+    embeddeds=[],
+    cc=[],
+    bcc=[],
+    message_id_string=None,
+    date=None,
+    headers=[],
+):
     """
     Compose an email regarding the arguments. Call L{build_mail()} and
     L{complete_mail()} at once.
@@ -483,11 +572,31 @@ def compose_mail(sender, recipients, subject, default_charset, text, html=None, 
 
     >>> payload, mail_from, rcpt_to, msg_id=compose_mail((u'Me', 'me@foo.com'), [(u'Him', 'him@bar.com')], u'the subject', 'iso-8859-1', ('Hello world', 'us-ascii'), attachments=[('attached', 'text', 'plain', 'text.txt', 'us-ascii')])
     """
-    message=build_mail(text, html, attachments, embeddeds)
-    return complete_mail(message, sender, recipients, subject, default_charset, cc, bcc, message_id_string, date, headers)
+    message = build_mail(text, html, attachments, embeddeds)
+    return complete_mail(
+        message,
+        sender,
+        recipients,
+        subject,
+        default_charset,
+        cc,
+        bcc,
+        message_id_string,
+        date,
+        headers,
+    )
 
 
-def send_mail2(payload, mail_from, rcpt_to, smtp_host, smtp_port=25, smtp_mode='normal', smtp_login=None, smtp_password=None):
+def send_mail2(
+    payload,
+    mail_from,
+    rcpt_to,
+    smtp_host,
+    smtp_port=25,
+    smtp_mode='normal',
+    smtp_login=None,
+    smtp_password=None,
+):
     """
     Send the message to a SMTP host. Look at the L{send_mail()} documentation.
     L{send_mail()} call this function and catch all exceptions to convert them
@@ -509,11 +618,11 @@ def send_mail2(payload, mail_from, rcpt_to, smtp_host, smtp_port=25, smtp_mode='
     @raise smtplib.SMTPException: Look at the standard C{smtplib.SMTP.sendmail()} documentation.
 
     """
-    if smtp_mode=='ssl':
-        smtp=smtplib.SMTP_SSL(smtp_host, smtp_port)
+    if smtp_mode == 'ssl':
+        smtp = smtplib.SMTP_SSL(smtp_host, smtp_port)
     else:
-        smtp=smtplib.SMTP(smtp_host, smtp_port)
-        if smtp_mode=='tls':
+        smtp = smtplib.SMTP(smtp_host, smtp_port)
+        if smtp_mode == 'tls':
             smtp.starttls()
 
     if smtp_login and smtp_password:
@@ -522,10 +631,10 @@ def send_mail2(payload, mail_from, rcpt_to, smtp_host, smtp_port=25, smtp_mode='
             # because HMAC used in CRAM_MD5 require non unicode string
             smtp.login(smtp_login.encode('utf-8'), smtp_password.encode('utf-8'))
         else:
-            #python 3.x
+            # python 3.x
             smtp.login(smtp_login, smtp_password)
     try:
-        ret=smtp.sendmail(mail_from, rcpt_to, payload)
+        ret = smtp.sendmail(mail_from, rcpt_to, payload)
     finally:
         try:
             smtp.quit()
@@ -534,7 +643,17 @@ def send_mail2(payload, mail_from, rcpt_to, smtp_host, smtp_port=25, smtp_mode='
 
     return ret
 
-def send_mail(payload, mail_from, rcpt_to, smtp_host, smtp_port=25, smtp_mode='normal', smtp_login=None, smtp_password=None):
+
+def send_mail(
+    payload,
+    mail_from,
+    rcpt_to,
+    smtp_host,
+    smtp_port=25,
+    smtp_mode='normal',
+    smtp_login=None,
+    smtp_password=None,
+):
     """
     Send the message to a SMTP host. Handle SSL, TLS and authentication.
     I{payload}, I{mail_from} and I{rcpt_to} can come from values returned by
@@ -603,30 +722,36 @@ def send_mail(payload, mail_from, rcpt_to, smtp_host, smtp_port=25, smtp_mode='n
 
     """
 
-    error=dict()
+    error = dict()
     try:
-        ret=send_mail2(payload, mail_from, rcpt_to, smtp_host, smtp_port, smtp_mode, smtp_login, smtp_password)
-    except (socket.error, ) as e:
-        error='server %s:%s not responding: %s' % (smtp_host, smtp_port, e)
+        ret = send_mail2(
+            payload,
+            mail_from,
+            rcpt_to,
+            smtp_host,
+            smtp_port,
+            smtp_mode,
+            smtp_login,
+            smtp_password,
+        )
+    except (socket.error,) as e:
+        error = 'server %s:%s not responding: %s' % (smtp_host, smtp_port, e)
     except smtplib.SMTPAuthenticationError as e:
-        error='authentication error: %s' % (e, )
+        error = 'authentication error: %s' % (e,)
     except smtplib.SMTPRecipientsRefused as e:
         # code, error=e.recipients[recipient_addr]
-        error='all recipients refused: '+', '.join(e.recipients.keys())
+        error = 'all recipients refused: ' + ', '.join(e.recipients.keys())
     except smtplib.SMTPSenderRefused as e:
         # e.sender, e.smtp_code, e.smtp_error
-        error='sender refused: %s' % (e.sender, )
+        error = 'sender refused: %s' % (e.sender,)
     except smtplib.SMTPDataError as e:
-        error='SMTP protocol mismatch: %s' % (e, )
+        error = 'SMTP protocol mismatch: %s' % (e,)
     except smtplib.SMTPHeloError as e:
-        error="server didn't reply properly to the HELO greeting: %s" % (e, )
+        error = "server didn't reply properly to the HELO greeting: %s" % (e,)
     except smtplib.SMTPException as e:
-        error='SMTP error: %s' % (e, )
-#    except Exception, e:
-#        raise # unknown error
+        error = 'SMTP error: %s' % (e,)
     else:
         # failed addresses and error messages
-        error=ret
+        error = ret
 
     return error
-
