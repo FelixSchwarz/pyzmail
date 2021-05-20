@@ -265,7 +265,7 @@ def guess_mime_type(fp, default_type='application/octet-stream'):
 
 
 def build_mail(
-    text, html=None, attachments=[], embeddeds=[], use_quoted_printable=False
+    text, html=None, attachments=(), embeddeds=(), use_quoted_printable=False
 ):
     """
     Generate the core of the email message regarding the parameters.
@@ -309,12 +309,12 @@ def build_mail(
             C{('iso-8859-1', 'fr', u'r\\xe9pertoir.png'.encode('iso-8859-1'))}
             - I{charset} : if I{maintype} is 'text', then I{data} must be encoded
             using this I{charset}. It can be None for non 'text' content.
-    @type attachments: list
+    @type attachments: iterable
     @keyword embeddeds: is a list of documents embedded inside the HTML or text
         version of the message. It is similar to the I{attachments} list,
         but I{filename} is replaced by I{content_id} that is related to
         the B{cid} reference into the HTML or text version of the message.
-    @type embeddeds: list
+    @type embeddeds: iterable
     @rtype: inherit from email.Message
     @return: the message in a MIME object
 
@@ -399,11 +399,11 @@ def complete_mail(
     recipients,
     subject,
     default_charset,
-    cc=[],
-    bcc=[],
+    cc=(),
+    bcc=(),
     message_id_string=None,
     date=None,
-    headers=[],
+    headers=(),
 ):
     """
     Fill in the From, To, Cc, Subject, Date and Message-Id I{headers} of
@@ -425,10 +425,10 @@ def complete_mail(
     @param default_charset: The default charset for this email. Arguments
     that are non unicode string are supposed to be encoded using this charset.
     This I{charset} will be used has an hint when encoding mail content.
-    @type cc: list
+    @type cc: iterable
     @keyword cc: The I{carbone copy} addresses. Same format as the I{recipients}
     argument.
-    @type bcc: list
+    @type bcc: iterable
     @keyword bcc: The I{blind carbone copy} addresses. Same format as the I{recipients}
     argument.
     @type message_id_string: str or None
@@ -439,7 +439,7 @@ def complete_mail(
     @type date: int or None
     @keyword date: utc time in second from the epoch or None. If None then
     use curent time C{time.time()} instead.
-    @type headers: list of tuple
+    @type headers: iterable of tuple
     @keyword headers: a list of C{(field, value)} tuples to fill in the mail
     header fields. values can be instances of email.header.Header or unicode strings
     that will be encoded using I{default_charset}.
