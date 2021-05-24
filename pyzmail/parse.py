@@ -165,18 +165,18 @@ class MailPart:
         return payload
 
     def __repr__(self):
-        st = u'MailPart<'
+        st = 'MailPart<'
         if self.is_body:
-            st += u'*'
+            st += '*'
         st += self.type
         if self.charset:
-            st += ' charset=' + self.charset
+            st += ' charset=' + repr(self.charset)
         if self.filename:
-            st += ' filename=' + self.filename
+            st += ' filename=' + repr(self.filename)
         if self.content_id:
-            st += ' content_id=' + self.content_id
+            st += ' content_id=' + repr(self.content_id)
         st += ' len=%d' % (len(self.get_payload()),)
-        st += u'>'
+        st += '>'
         return st
 
 
@@ -485,7 +485,7 @@ def get_mail_parts(msg):
     <BLANKLINE>
     >>> parts=get_mail_parts(msg)
     >>> parts
-    [MailPart<*text/plain charset=us-ascii len=9>, MailPart<image/png filename=image.png len=4>]
+    [MailPart<*text/plain charset='us-ascii' len=9>, MailPart<image/png filename=u'image.png' len=4>]
     >>> # the star "*" means this is the mail content, not an attachment
     >>> parts[0].get_payload().decode(parts[0].charset)
     u'The text.'
