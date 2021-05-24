@@ -27,6 +27,7 @@ import smtplib, socket
 import email.charset
 import email.encoders
 import email.header
+from email.header import Header
 import email.utils
 import email.mime.base
 import email.mime.text
@@ -196,7 +197,15 @@ class Attachment(AttachmentType):
             self.charset,
             use_quoted_printable=self.use_quoted_printable,
         )
-        part.add_header('Content-Disposition', 'attachment', filename=self.filename)
+        encoded_filename = None
+        if six.PY2 and isinstance(self.filename, six.text_type):
+            # Python 2 does not encode non-ascii filenames properly
+            try:
+                self.filename.encode('ascii')
+            except UnicodeEncodeError:
+                encoded_filename = Header(self.filename, 'utf-8').encode()
+        header_fn = encoded_filename or self.filename
+        part.add_header('Content-Disposition', 'attachment', filename=header_fn)
         return part
 
 
