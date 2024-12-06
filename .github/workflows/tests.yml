@@ -1,0 +1,54 @@
+name: run
+
+on:
+  push:
+    branches:
+      - "main"
+      - "ci"
+  pull_request:
+    branches:
+    - main
+
+jobs:
+  # GitHub Actions does not support Python 2 anymore via "actions/setup-python" since May 2023:
+  #     https://github.com/actions/setup-python/issues/672
+  # As a workaround use a Python 2.7 container which should have everything pre-installed.
+  tests_old_env_py2:
+    runs-on: ubuntu-20.04
+    container:
+      image: python:2.7.18-buster
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: |
+        pip install -e .
+        pip install pytest
+
+    - name: Run test suite
+      run: |
+        pytest
+
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.8, 3.9, "3.10", "3.11"]
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+          python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        pip install -e .
+        pip install pytest
+
+    - name: Run test suite
+      run: |
+        pytest
