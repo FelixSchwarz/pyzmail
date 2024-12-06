@@ -4,24 +4,15 @@
 # (c) Alain Spineux <alain.spineux@gmail.com>
 # http://www.magiksys.net/pyzmail
 # Released under GPL
-
 """compose and send email"""
+
 
 import sys
 import os
 import optparse
 import locale
 
-__version__='1.0.4'
-
-try:
-    import pyzmail
-except ImportError:
-    if os.path.isdir('../pyzmail'):
-        sys.path.append(os.path.abspath('..'))
-    elif os.path.isdir('pyzmail'):
-        sys.path.append(os.path.abspath('.'))
-    import pyzmail
+import pyzmail
 
 class BadEmailAddress(ValueError):
     pass
@@ -159,15 +150,7 @@ def check_addresses(values):
 
     return ret
 
-default_encoding=locale.getdefaultlocale()[1]
-if not default_encoding:
-    # use default per platform
-    if sys.platform in ('win32', ):
-        default_encoding='windows-1252'
-    else:
-        default_encoding='utf-8'
-
-def gen_parser():
+def gen_parser(default_encoding):
     parser=optparse.OptionParser()
 
     parser.add_option("-V", "--version", action="store_true", dest="version", help="display version")
@@ -200,105 +183,111 @@ def gen_parser():
     parser.add_option("-E", "--eicar", action="store_true", dest="eicar", default=False, help="include eicar virus in attachments")
     return parser
 
-if sys.version_info<=(3, 0):
-    # first decoding to get the arg_charset and decode the command line arguments
-    parser=gen_parser()
-    (options, args) = parser.parse_args()
-    arg_charset=options.arg_charset
-    sys_argv=[x.decode(arg_charset) for x in sys.argv[:]]
-else:
-    # py3k does it well
-    sys_argv=sys.argv[:]
+def pyzsendmail_main():
+    default_encoding = locale.getdefaultlocale()[1]
+    if not default_encoding:
+        # use default per platform
+        if sys.platform in ('win32', ):
+            default_encoding='windows-1252'
+        else:
+            default_encoding='utf-8'
 
-# use a new parser
-parser=gen_parser()
-(options, args) = parser.parse_args(sys_argv)
-
-#import doctest
-#doctest.testmod()
-
-if options.version:
-    print('pyzmail version: %s' % (pyzmail.__version__, ))
-    print('pyzsendmail version: %s' % (__version__, ))
-    print('default arg-charset: %s' % (default_encoding, ))
-    print('stdin.encoding: %s' % (sys.stdin.encoding, ))
-    print('stdout.encoding: %s' % (sys.stdout.encoding, ))
-    sys.exit(9)
-
-# Misc
-mail_charset=options.mail_charset
-subject=options.subject
-smtp_login=options.smtp_login
-if smtp_login:
-    smtp_login=smtp_login.encode('utf-8')
-smtp_password=options.smtp_password
-if smtp_password:
-    smtp_password=smtp_password.encode('utf-8')
-
-# Addresses From, To, Cc and Bcc
-if not options.sender:
-    parser.error('option required: --from')
-sender=check_addr(options.sender)
-
-to=[]
-if options.to:
-    to=check_addresses(options.to)
-
-cc=[]
-if options.cc:
-    cc=check_addresses(options.cc)
-
-bcc=[]
-if options.bcc:
-    bcc=check_addresses(options.bcc)
-
-if not to and not cc and not bcc:
-     parser.error('no recipient')
-
-# Content
-if options.text:
-    text=handle_content(options.text, mail_charset)
-else:
-    text=None
-
-if options.html:
-    html=handle_content(options.html, mail_charset)
-else:
-    html=None
-
-# Attachments
-# type:filename:target_file:charset
-# image/png:file.png:/tmp/file.png:
-attachments=[]
-for attachment in options.attachments:
-    attachment=handle_attachment(attachment)
-    # print attachment[1:]
-    attachments.append(attachment)
-
-if options.eicar:
-    attachments.append(
-        ('X5O!P%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*', \
-         'application', 'octet-stream', 'eicar.com', None))
-
-embeddeds=[]
-for embedded in options.embeddeds:
-    embedded=handle_attachment(embedded)
-    # print embedded[1:]
-    embeddeds.append(embedded)
-
-payload, mail_from, rcpt_to, msg_id=pyzmail.compose_mail(sender, to, subject, mail_charset, text, html, attachments=attachments, embeddeds=embeddeds, cc=cc, bcc=bcc, message_id_string='pyzsendmail')
-ret=pyzmail.send_mail(payload, mail_from, rcpt_to, options.smtp_host, smtp_port=options.smtp_port, smtp_mode=options.smtp_mode, smtp_login=options.smtp_login, smtp_password=options.smtp_password)
-
-if isinstance(ret, dict):
-    if ret:
-        print('failed recipients:')
-        for recipient, (code, msg) in ret.items():
-            print('%d %s\t%s' % (code, recipient, msg))
-        sys.exit(1)
+    if sys.version_info<=(3, 0):
+        # first decoding to get the arg_charset and decode the command line arguments
+        parser=gen_parser(default_encoding)
+        (options, args) = parser.parse_args()
+        arg_charset=options.arg_charset
+        sys_argv=[x.decode(arg_charset) for x in sys.argv[:]]
     else:
-        sys.exit(0)
-else:
-    print('error:')
-    print(ret)
-    sys.exit(2)
+        # py3k does it well
+        sys_argv=sys.argv[:]
+
+    # use a new parser
+    parser=gen_parser(default_encoding)
+    (options, args) = parser.parse_args(sys_argv)
+
+
+    if options.version:
+        print('pyzmail version: %s' % (pyzmail.__version__, ))
+        print('default arg-charset: %s' % (default_encoding, ))
+        print('stdin.encoding: %s' % (sys.stdin.encoding, ))
+        print('stdout.encoding: %s' % (sys.stdout.encoding, ))
+        sys.exit(9)
+
+    # Misc
+    mail_charset=options.mail_charset
+    subject=options.subject
+    smtp_login=options.smtp_login
+    if smtp_login:
+        smtp_login=smtp_login.encode('utf-8')
+    smtp_password=options.smtp_password
+    if smtp_password:
+        smtp_password=smtp_password.encode('utf-8')
+
+    # Addresses From, To, Cc and Bcc
+    if not options.sender:
+        parser.error('option required: --from')
+    sender=check_addr(options.sender)
+
+    to=[]
+    if options.to:
+        to=check_addresses(options.to)
+
+    cc=[]
+    if options.cc:
+        cc=check_addresses(options.cc)
+
+    bcc=[]
+    if options.bcc:
+        bcc=check_addresses(options.bcc)
+
+    if not to and not cc and not bcc:
+        parser.error('no recipient')
+
+    # Content
+    if options.text:
+        text=handle_content(options.text, mail_charset)
+    else:
+        text=None
+
+    if options.html:
+        html=handle_content(options.html, mail_charset)
+    else:
+        html=None
+
+    # Attachments
+    # type:filename:target_file:charset
+    # image/png:file.png:/tmp/file.png:
+    attachments=[]
+    for attachment in options.attachments:
+        attachment=handle_attachment(attachment)
+        # print attachment[1:]
+        attachments.append(attachment)
+
+    if options.eicar:
+        attachments.append(
+            ('X5O!P%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*', \
+            'application', 'octet-stream', 'eicar.com', None))
+
+    embeddeds=[]
+    for embedded in options.embeddeds:
+        embedded=handle_attachment(embedded)
+        # print embedded[1:]
+        embeddeds.append(embedded)
+
+    payload, mail_from, rcpt_to, msg_id=pyzmail.compose_mail(sender, to, subject, mail_charset, text, html, attachments=attachments, embeddeds=embeddeds, cc=cc, bcc=bcc, message_id_string='pyzsendmail')
+    ret=pyzmail.send_mail(payload, mail_from, rcpt_to, options.smtp_host, smtp_port=options.smtp_port, smtp_mode=options.smtp_mode, smtp_login=options.smtp_login, smtp_password=options.smtp_password)
+
+    if isinstance(ret, dict):
+        if ret:
+            print('failed recipients:')
+            for recipient, (code, msg) in ret.items():
+                print('%d %s\t%s' % (code, recipient, msg))
+            sys.exit(1)
+        else:
+            sys.exit(0)
+    else:
+        print('error:')
+        print(ret)
+        sys.exit(2)
 
