@@ -64,7 +64,7 @@ def handle_addr(addr):
         name=address
 
     if not pyzmail.email_address_re.match(address):
-        raise BadEmailAddress, address
+        raise BadEmailAddress(address)
 
     return name, address
 
@@ -92,7 +92,7 @@ def handle_content(arg, mail_charset):
                 parser.error('file not found: '+filename)
             try:
                 content=open(filename, 'rb').read()
-            except IOError, e:
+            except IOError as e:
                 parser.error(str(e))
 
     if not encoding:
@@ -135,7 +135,7 @@ def handle_attachment(arg):
 
     try:
         data=open(target, 'rb').read()
-    except IOError, e:
+    except IOError as e:
         parser.error(str(e))
 
     return data, maintype, subtype, filename, charset
@@ -205,7 +205,7 @@ if sys.version_info<=(3, 0):
     parser=gen_parser()
     (options, args) = parser.parse_args()
     arg_charset=options.arg_charset
-    sys_argv=map(lambda x:x.decode(arg_charset), sys.argv[:])
+    sys_argv=[x.decode(arg_charset) for x in sys.argv[:]]
 else:
     # py3k does it well
     sys_argv=sys.argv[:]
@@ -218,11 +218,11 @@ parser=gen_parser()
 #doctest.testmod()
 
 if options.version:
-    print 'pyzmail version: %s' % (pyzmail.__version__, )
-    print 'pyzsendmail version: %s' % (__version__, )
-    print 'default arg-charset: %s' % (default_encoding, )
-    print 'stdin.encoding: %s' % (sys.stdin.encoding, )
-    print 'stdout.encoding: %s' % (sys.stdout.encoding, )
+    print('pyzmail version: %s' % (pyzmail.__version__, ))
+    print('pyzsendmail version: %s' % (__version__, ))
+    print('default arg-charset: %s' % (default_encoding, ))
+    print('stdin.encoding: %s' % (sys.stdin.encoding, ))
+    print('stdout.encoding: %s' % (sys.stdout.encoding, ))
     sys.exit(9)
 
 # Misc
@@ -291,14 +291,14 @@ ret=pyzmail.send_mail(payload, mail_from, rcpt_to, options.smtp_host, smtp_port=
 
 if isinstance(ret, dict):
     if ret:
-        print 'failed recipients:'
-        for recipient, (code, msg) in ret.iteritems():
-            print '%d %s\t%s' % (code, recipient, msg)
+        print('failed recipients:')
+        for recipient, (code, msg) in ret.items():
+            print('%d %s\t%s' % (code, recipient, msg))
         sys.exit(1)
     else:
         sys.exit(0)
 else:
-    print 'error:'
-    print ret
+    print('error:')
+    print(ret)
     sys.exit(2)
 
